@@ -1,92 +1,86 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Shield, Zap, Globe, CheckCircle } from 'lucide-react'
+import { ArrowRight, CheckCircle } from 'lucide-react'
 
 const CTASection = () => {
   return (
     <section className="relative overflow-hidden py-20">
-      {/* Background with gradient and pattern */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-      </div>
+      {/* Base gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))]"></div>
       
-      {/* Animated circles */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      {/* Grid overlay - now visible on top of gradient */}
+      <div 
+        className="absolute inset-0" 
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}
+      ></div>
+      
+      {/* Animated circles - on top of grid */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-white/20 rounded-full blur-3xl animate-pulse-glow"></div>
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl animate-pulse-glow delay-200"></div>
+      <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-float"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-float delay-400"></div>
 
-      <div className="container relative">
+      <div className="container relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto text-center text-white"
+          className="max-w-3xl mx-auto text-center"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Ready to Transform Your{' '}
-            <span className="text-secondary">Future?</span>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+            Turn your goals into{' '}
+            <span className="text-[hsl(var(--secondary))]">reality</span>
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            Join thousands of users already earning and growing with LeankUp
+            With just a few clicks, get the support you need to complete tasks or fund your dreams in your local community.
           </p>
 
-          {/* Benefits */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
             {[
               "Free to join",
-              "Instant withdrawals",
+              "Escrow protected",
               "24/7 support",
-              "Secure payments",
-              "Global community",
-              "No hidden fees"
+              "Verified talent",
+              "Instant withdrawals",
+              "Community focused"
             ].map((benefit, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 transition={{ delay: i * 0.1 }}
                 className="flex items-center gap-2 text-white/90"
               >
-                <CheckCircle className="h-5 w-5 text-secondary flex-shrink-0" />
+                <CheckCircle className="h-4 w-4 text-[hsl(var(--secondary))] flex-shrink-0" />
                 <span className="text-sm">{benefit}</span>
               </motion.div>
             ))}
           </div>
 
-          {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link to="/register">
-                <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 px-8 w-full sm:w-auto">
-                  Create Free Account
+                <Button size="lg" variant="secondary" className="bg-white text-[hsl(var(--primary))] hover:bg-white/90 px-8 w-full sm:w-auto border-0 shadow-xl">
+                  Get Started Now
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/contact">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 px-8 w-full sm:w-auto">
-                  Talk to Sales
+              <Link to="/about">
+                <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 w-full sm:w-auto">
+                  Learn More
                 </Button>
               </Link>
             </motion.div>
-          </div>
-
-          {/* Trust badges */}
-          <div className="flex items-center justify-center gap-6 mt-8 text-sm text-white/80">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              <span>SSL Secure</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              <span>Instant Setup</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4" />
-              <span>Global Access</span>
-            </div>
           </div>
         </motion.div>
       </div>

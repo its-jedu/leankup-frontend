@@ -24,11 +24,6 @@ const HeroSection = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] px-4 py-2 rounded-full mb-6 border border-[hsl(var(--primary))]/20">
-              <Zap className="h-4 w-4" />
-              <span className="text-sm font-medium">Trusted by 500+ businesses</span>
-            </div>
-
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
               <span className="text-foreground">Outsource </span>
               <span className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
@@ -41,14 +36,14 @@ const HeroSection = () => {
             </h1>
 
             <p className="text-lg text-muted-foreground mb-8 max-w-lg">
-              Connect with verified local talent for your tasks or launch fundraising campaigns with secure escrow protection.
+              Connect with verified local talent for your tasks or launch fundraising campaigns with secure escrow protection. Empowering communities, one task at a time.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Link to="/register">
                   <Button size="lg" className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary-light))] text-white text-base px-8 shadow-lg hover:shadow-xl w-full sm:w-auto">
-                    Start Free
+                    Start Your Journey
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
@@ -78,18 +73,6 @@ const HeroSection = () => {
                 <Wallet className="h-5 w-5 text-[hsl(var(--accent))] mb-2" />
                 <div className="text-xl font-bold text-foreground">$450k</div>
                 <div className="text-xs text-muted-foreground">Funds Raised</div>
-              </div>
-            </div>
-
-            {/* Trust badges */}
-            <div className="flex items-center gap-4 mt-6 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Shield className="h-3 w-3 text-green-500" />
-                <span>Escrow Protected</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-blue-500" />
-                <span>Verified Users</span>
               </div>
             </div>
           </motion.div>
