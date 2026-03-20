@@ -17,7 +17,7 @@ import Campaigns from './pages/campaigns/Campaigns'
 import CampaignDetail from './pages/campaigns/CampaignDetail'
 import CreateCampaign from './pages/campaigns/CreateCampaign'
 import Wallet from './pages/wallet/Wallet'
-import DashboardLayout from './components/DashboardLayout'
+import DashboardLayout from './components/dashboard/DashboardLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 
 const queryClient = new QueryClient({

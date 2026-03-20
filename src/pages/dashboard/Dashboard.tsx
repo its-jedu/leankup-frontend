@@ -4,13 +4,14 @@ import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import axiosInstance from '@/lib/axios'
-import { Briefcase, Target, Wallet, TrendingUp, Clock, CheckCircle } from 'lucide-react'
+import { Briefcase, Target, Wallet, TrendingUp, Clock, CheckCircle, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Task, Campaign } from '@/types'
 
 interface DashboardStats {
   totalTasks: number
   activeTasks: number
+  completedTasks: number
   totalCampaigns: number
   activeCampaigns: number
   walletBalance: number
@@ -19,56 +20,62 @@ interface DashboardStats {
 const Dashboard = () => {
   const { user } = useAuth()
 
-  // Fetch user stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['dashboard-stats', user?.id],
+  // Fetch user's tasks
+  const { data: tasksData, isLoading: tasksLoading } = useQuery({
+    queryKey: ['user-tasks', user?.id],
     queryFn: async () => {
       try {
-        const [tasksRes, campaignsRes, walletRes] = await Promise.all([
-          axiosInstance.get('/tasks/', { params: { creator: user?.id } }),
-          axiosInstance.get('/campaigns/', { params: { creator: user?.id } }),
-          axiosInstance.get('/wallet/balance/'),
-        ])
-
-        // Handle different response structures
-        const tasks = tasksRes.data?.results || tasksRes.data || []
-        const campaigns = campaignsRes.data?.results || campaignsRes.data || []
-        const walletBalance = walletRes.data?.balance || walletRes.data || 0
-
-        return {
-          totalTasks: Array.isArray(tasks) ? tasks.length : 0,
-          activeTasks: Array.isArray(tasks) 
-            ? tasks.filter((t: Task) => t.status === 'open').length 
-            : 0,
-          totalCampaigns: Array.isArray(campaigns) ? campaigns.length : 0,
-          activeCampaigns: Array.isArray(campaigns)
-            ? campaigns.filter((c: Campaign) => c.status === 'active').length
-            : 0,
-          walletBalance: typeof walletBalance === 'number' ? walletBalance : 0,
-        }
+        const response = await axiosInstance.get('/tasks/', { 
+          params: { creator: user?.id, ordering: '-created_at' }
+        })
+        return response.data?.results || response.data || []
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error)
-        return {
-          totalTasks: 0,
-          activeTasks: 0,
-          totalCampaigns: 0,
-          activeCampaigns: 0,
-          walletBalance: 0,
-        }
+        console.error('Error fetching tasks:', error)
+        return []
       }
     },
     enabled: !!user,
   })
 
+  // Fetch user's campaigns
+  const { data: campaignsData, isLoading: campaignsLoading } = useQuery({
+    queryKey: ['user-campaigns', user?.id],
+    queryFn: async () => {
+      try {
+        const response = await axiosInstance.get('/campaigns/', { 
+          params: { creator: user?.id, ordering: '-created_at' }
+        })
+        return response.data?.results || response.data || []
+      } catch (error) {
+        console.error('Error fetching campaigns:', error)
+        return []
+      }
+    },
+    enabled: !!user,
+  })
+
+  // Fetch wallet balance
+  const { data: walletData, isLoading: walletLoading } = useQuery({
+    queryKey: ['wallet-balance'],
+    queryFn: async () => {
+      try {
+        const response = await axiosInstance.get('/wallet/balance/')
+        return response.data?.balance || 0
+      } catch (error) {
+        console.error('Error fetching wallet balance:', error)
+        return 0
+      }
+    },
+  })
+
   // Fetch recent tasks
-  const { data: recentTasksData, isLoading: tasksLoading } = useQuery({
+  const { data: recentTasksData, isLoading: recentTasksLoading } = useQuery({
     queryKey: ['recent-tasks'],
     queryFn: async () => {
       try {
         const response = await axiosInstance.get('/tasks/', {
           params: { ordering: '-created_at', limit: 5 }
         })
-        // Handle paginated or direct response
         return response.data?.results || response.data || []
       } catch (error) {
         console.error('Error fetching recent tasks:', error)
@@ -78,14 +85,13 @@ const Dashboard = () => {
   })
 
   // Fetch recent campaigns
-  const { data: recentCampaignsData, isLoading: campaignsLoading } = useQuery({
+  const { data: recentCampaignsData, isLoading: recentCampaignsLoading } = useQuery({
     queryKey: ['recent-campaigns'],
     queryFn: async () => {
       try {
         const response = await axiosInstance.get('/campaigns/', {
           params: { ordering: '-created_at', limit: 5, status: 'active' }
         })
-        // Handle paginated or direct response
         return response.data?.results || response.data || []
       } catch (error) {
         console.error('Error fetching recent campaigns:', error)
@@ -94,42 +100,29 @@ const Dashboard = () => {
     },
   })
 
-  // Ensure we have arrays
+  const tasks = Array.isArray(tasksData) ? tasksData : []
+  const campaigns = Array.isArray(campaignsData) ? campaignsData : []
   const recentTasks = Array.isArray(recentTasksData) ? recentTasksData : []
   const recentCampaigns = Array.isArray(recentCampaignsData) ? recentCampaignsData : []
+  const walletBalance = typeof walletData === 'number' ? walletData : 0
 
-  const summaryCards = [
-    {
-      title: 'Total Tasks',
-      value: stats?.totalTasks || 0,
-      icon: Briefcase,
-      color: 'bg-blue-500',
-      link: '/tasks',
-    },
-    {
-      title: 'Active Campaigns',
-      value: stats?.activeCampaigns || 0,
-      icon: Target,
-      color: 'bg-green-500',
-      link: '/campaigns',
-    },
-    {
-      title: 'Wallet Balance',
-      value: `$${stats?.walletBalance?.toFixed(2) || '0.00'}`,
-      icon: Wallet,
-      color: 'bg-purple-500',
-      link: '/wallet',
-    },
-    {
-      title: 'Completion Rate',
-      value: '85%',
-      icon: TrendingUp,
-      color: 'bg-orange-500',
-      link: '#',
-    },
+  const totalTasks = tasks.length
+  const activeTasks = tasks.filter((t: Task) => t.status === 'open').length
+  const completedTasks = tasks.filter((t: Task) => t.status === 'completed').length
+  const totalCampaigns = campaigns.length
+  const activeCampaigns = campaigns.filter((c: Campaign) => c.status === 'active').length
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
+  const statsCards = [
+    { title: 'Total Tasks', value: totalTasks, icon: Briefcase, color: 'bg-blue-500', link: '/tasks' },
+    { title: 'Active Tasks', value: activeTasks, icon: Clock, color: 'bg-green-500', link: '/tasks' },
+    { title: 'Wallet Balance', value: `₦${walletBalance.toLocaleString()}`, icon: Wallet, color: 'bg-purple-500', link: '/wallet' },
+    { title: 'Active Campaigns', value: activeCampaigns, icon: Target, color: 'bg-orange-500', link: '/campaigns' },
+    { title: 'Completion Rate', value: `${completionRate}%`, icon: TrendingUp, color: 'bg-cyan-500', link: '#' },
+    { title: 'Tasks Completed', value: completedTasks, icon: CheckCircle, color: 'bg-emerald-500', link: '/tasks' },
   ]
 
-  const isLoading = statsLoading || tasksLoading || campaignsLoading
+  const isLoading = tasksLoading || campaignsLoading || walletLoading || recentTasksLoading || recentCampaignsLoading
 
   if (isLoading) {
     return (
@@ -140,70 +133,76 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 pb-8">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.username || 'User'}! 👋</h1>
-        <p className="text-muted-foreground">Here's what's happening with your account today.</p>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5 p-5">
+        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div className="relative">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">
+            Welcome back, {user?.first_name || user?.username}!
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Here's what's happening with your account
+          </p>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {summaryCards.map((card, index) => (
+      {/* Stats Cards - Responsive Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {statsCards.map((card, index) => (
           <Link to={card.link} key={index}>
-            <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`${card.color} p-3 rounded-xl text-white`}>
-                    <card.icon className="h-6 w-6" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">This month</span>
+            <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border-border h-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className={`${card.color} w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-md`}>
+                  <card.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-foreground">{card.value}</h3>
-                  <p className="text-sm text-muted-foreground">{card.title}</p>
-                </div>
+                <p className="text-lg sm:text-xl font-bold text-foreground">{card.value}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{card.title}</p>
               </CardContent>
             </Card>
           </Link>
         ))}
       </div>
 
-      {/* Recent Tasks and Campaigns */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Recent Activity Section */}
+      <div className="grid gap-5 md:grid-cols-2">
         {/* Recent Tasks */}
         <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-foreground">Recent Tasks</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Briefcase className="h-4 w-4 text-primary" />
+              Recent Tasks
+            </CardTitle>
             <Link to="/tasks">
-              <Button variant="ghost" size="sm" className="text-primary">View All</Button>
+              <Button variant="ghost" size="sm" className="text-primary text-xs gap-1 h-8">
+                View All
+                <ArrowRight className="h-3 w-3" />
+              </Button>
             </Link>
           </CardHeader>
           <CardContent>
             {recentTasks.length > 0 ? (
-              <div className="space-y-4">
-                {recentTasks.slice(0, 5).map((task: Task) => (
+              <div className="space-y-2">
+                {recentTasks.slice(0, 4).map((task: Task) => (
                   <Link to={`/tasks/${task.id}`} key={task.id}>
-                    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition cursor-pointer border border-border">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${
+                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-all">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className={`p-1.5 rounded-lg flex-shrink-0 ${
                           task.status === 'open' ? 'bg-green-500/10' :
                           task.status === 'in_progress' ? 'bg-blue-500/10' : 'bg-muted'
                         }`}>
                           {task.status === 'open' ? 
-                            <Clock className="h-4 w-4 text-green-600" /> :
+                            <Clock className="h-3 w-3 text-green-600" /> :
                           task.status === 'in_progress' ? 
-                            <TrendingUp className="h-4 w-4 text-blue-600" /> :
-                            <CheckCircle className="h-4 w-4 text-muted-foreground" />}
+                            <TrendingUp className="h-3 w-3 text-blue-600" /> :
+                            <CheckCircle className="h-3 w-3 text-muted-foreground" />}
                         </div>
-                        <div>
-                          <h4 className="font-medium text-foreground">{task.title}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            ${task.budget} • {task.location}
-                          </p>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-foreground truncate">{task.title}</h4>
+                          <p className="text-xs text-muted-foreground">₦{task.budget} • {task.location}</p>
                         </div>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
+                      <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ml-2 ${
                         task.status === 'open' ? 'bg-green-500/10 text-green-700' :
                         task.status === 'in_progress' ? 'bg-blue-500/10 text-blue-700' :
                         'bg-muted text-muted-foreground'
@@ -215,9 +214,10 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No tasks yet</p>
-                <Link to="/tasks/create" className="text-primary hover:underline text-sm mt-2 inline-block">
+              <div className="text-center py-6">
+                <Briefcase className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No tasks yet</p>
+                <Link to="/tasks/create" className="text-primary text-sm hover:underline mt-1 inline-block">
                   Create your first task
                 </Link>
               </div>
@@ -227,40 +227,45 @@ const Dashboard = () => {
 
         {/* Recent Campaigns */}
         <Card className="border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-foreground">Active Campaigns</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              Active Campaigns
+            </CardTitle>
             <Link to="/campaigns">
-              <Button variant="ghost" size="sm" className="text-primary">View All</Button>
+              <Button variant="ghost" size="sm" className="text-primary text-xs gap-1 h-8">
+                View All
+                <ArrowRight className="h-3 w-3" />
+              </Button>
             </Link>
           </CardHeader>
           <CardContent>
             {recentCampaigns.length > 0 ? (
-              <div className="space-y-4">
-                {recentCampaigns.slice(0, 5).map((campaign: Campaign) => {
+              <div className="space-y-3">
+                {recentCampaigns.slice(0, 4).map((campaign: Campaign) => {
                   const progress = (campaign.raised_amount / campaign.target_amount) * 100
                   return (
                     <Link to={`/campaigns/${campaign.id}`} key={campaign.id}>
-                      <div className="p-3 rounded-lg hover:bg-muted/50 transition cursor-pointer border border-border">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-foreground">{campaign.title}</h4>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
+                      <div className="p-2 rounded-lg hover:bg-muted/30 transition-all">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-medium text-sm text-foreground truncate flex-1">{campaign.title}</h4>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ml-2 flex-shrink-0 ${
                             campaign.status === 'active' ? 'bg-green-500/10 text-green-700' :
-                            campaign.status === 'draft' ? 'bg-muted text-muted-foreground' :
-                            'bg-yellow-500/10 text-yellow-700'
+                            'bg-muted text-muted-foreground'
                           }`}>
                             {campaign.status}
                           </span>
                         </div>
-                        <div className="space-y-2">
-                          <Progress value={progress} className="h-2" />
-                          <div className="flex justify-between text-sm">
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
                             <span className="text-muted-foreground">
-                              ${campaign.raised_amount?.toLocaleString()} raised
+                              ₦{campaign.raised_amount?.toLocaleString()} raised
                             </span>
                             <span className="text-muted-foreground">
-                              ${campaign.target_amount?.toLocaleString()} target
+                              ₦{campaign.target_amount?.toLocaleString()} target
                             </span>
                           </div>
+                          <Progress value={progress} className="h-1" />
                         </div>
                       </div>
                     </Link>
@@ -268,9 +273,10 @@ const Dashboard = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No campaigns yet</p>
-                <Link to="/campaigns/create" className="text-primary hover:underline text-sm mt-2 inline-block">
+              <div className="text-center py-6">
+                <Target className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No campaigns yet</p>
+                <Link to="/campaigns/create" className="text-primary text-sm hover:underline mt-1 inline-block">
                   Start your first campaign
                 </Link>
               </div>
@@ -280,27 +286,27 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <Card className="border-border">
+      <Card className="border-border bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5">
         <CardHeader>
-          <CardTitle className="text-foreground">Quick Actions</CardTitle>
+          <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-2">
             <Link to="/tasks/create">
-              <Button className="bg-primary hover:bg-primary/90 text-white">
-                <Briefcase className="mr-2 h-4 w-4" />
+              <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">
+                <Briefcase className="mr-1 h-3 w-3" />
                 Post a Task
               </Button>
             </Link>
             <Link to="/campaigns/create">
-              <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
-                <Target className="mr-2 h-4 w-4" />
+              <Button size="sm" variant="outline" className="border-primary text-primary hover:bg-primary/10">
+                <Target className="mr-1 h-3 w-3" />
                 Start Campaign
               </Button>
             </Link>
             <Link to="/wallet">
-              <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
-                <Wallet className="mr-2 h-4 w-4" />
+              <Button size="sm" variant="outline" className="border-primary text-primary hover:bg-primary/10">
+                <Wallet className="mr-1 h-3 w-3" />
                 View Wallet
               </Button>
             </Link>
