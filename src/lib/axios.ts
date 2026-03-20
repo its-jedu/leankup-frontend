@@ -11,6 +11,9 @@ export interface RegisterData {
   username: string
   email: string
   password: string
+  password2: string
+  first_name: string
+  last_name: string
 }
 
 export interface User {
@@ -66,31 +69,63 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: false,
 })
 
+// Request interceptor with debugging
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    
+    // Log request for debugging
+    console.log('📤 API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      data: config.data,
+      headers: config.headers,
+    })
+    
     return config
   },
   (error) => {
+    console.error('Request Error:', error)
     return Promise.reject(error)
   }
 )
 
+// Response interceptor with debugging
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Response:', {
+      status: response.status,
+      data: response.data,
+      url: response.config.url,
+    })
+    return response
+  },
   async (error) => {
+    console.error('API Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      message: error.message,
+    })
+
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Handle token refresh on 401
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login/') {
       originalRequest._retry = true
 
       try {
         const refreshToken = localStorage.getItem('refresh_token')
+        if (!refreshToken) {
+          throw new Error('No refresh token')
+        }
+
         const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
           refresh: refreshToken,
         })
@@ -101,6 +136,7 @@ axiosInstance.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${access}`
         return axiosInstance(originalRequest)
       } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError)
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
         window.location.href = '/login'

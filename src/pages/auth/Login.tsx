@@ -26,7 +26,11 @@ const Login = () => {
   })
 
   const onSubmit = async (data: LoginFormData) => {
-    await login(data)
+    // The backend accepts either username or email in the username field
+    await login({
+      username: data.username,
+      password: data.password
+    })
   }
 
   return (
@@ -82,9 +86,10 @@ const Login = () => {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input
                     {...register('username')}
-                    placeholder="john@example.com"
+                    placeholder="johndoe or john@example.com"
                     className="pl-10 h-12 bg-background border-border focus:border-primary transition-all duration-300"
                     disabled={loading}
+                    autoComplete="username"
                   />
                 </div>
                 {errors.username && (
@@ -122,6 +127,7 @@ const Login = () => {
                     placeholder="••••••••"
                     className="pl-10 pr-12 h-12 bg-background border-border focus:border-primary transition-all duration-300"
                     disabled={loading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
@@ -178,11 +184,19 @@ const Login = () => {
                 <p className="text-xs text-muted-foreground text-center mb-2">
                   Demo Credentials
                 </p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="text-muted-foreground">Username:</div>
-                  <div className="text-foreground font-medium">demo_user</div>
-                  <div className="text-muted-foreground">Password:</div>
-                  <div className="text-foreground font-medium">Demo123456</div>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Username:</span>
+                    <span className="text-foreground font-medium">User1</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="text-foreground font-medium">user1@gmail.com</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Password:</span>
+                    <span className="text-foreground font-medium">Jedu1122</span>
+                  </div>
                 </div>
               </motion.div>
             </form>
