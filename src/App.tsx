@@ -17,6 +17,9 @@ import Campaigns from './pages/campaigns/Campaigns'
 import CampaignDetail from './pages/campaigns/CampaignDetail'
 import CreateCampaign from './pages/campaigns/CreateCampaign'
 import Wallet from './pages/wallet/Wallet'
+import Community from './pages/community/Community'
+import Settings from './pages/settings/Settings'
+import Help from './pages/help/Help'
 import DashboardLayout from './components/dashboard/DashboardLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -61,6 +64,9 @@ function AppContent() {
             <Route path="/campaigns/:id" element={<CampaignDetail />} />
             <Route path="/campaigns/create" element={<CreateCampaign />} />
             <Route path="/wallet" element={<Wallet />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/help" element={<Help />} />
           </Route>
         </Route>
         

@@ -3,7 +3,6 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/button'
-import { Progress } from '../../components/ui/progress'
 import {
   Dialog,
   DialogContent,
@@ -28,8 +27,10 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
-  Send
+  Send,
+  Briefcase
 } from 'lucide-react'
+import { showToast } from '@/lib/toast'
 
 const TaskDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -40,35 +41,91 @@ const TaskDetail = () => {
   const [isApplyOpen, setIsApplyOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
-  const { data: task, isLoading } = useQuery<{ data: Task }>({
+  // Fetch task details
+  const { data: taskResponse, isLoading } = useQuery({
     queryKey: ['task', id],
-    queryFn: () => axiosInstance.get(`/tasks/${id}/`),
+    queryFn: async () => {
+      const response = await axiosInstance.get(`/tasks/${id}/`)
+      return response.data
+    },
   })
 
-  const { data: applications } = useQuery<{ data: Application[] }>({
+  // Fetch applications (only for creator)
+  const { data: applicationsResponse } = useQuery({
     queryKey: ['task-applications', id],
-    queryFn: () => axiosInstance.get(`/tasks/${id}/applications/`),
-    enabled: !!user && task?.data?.creator?.id === user?.id,
+    queryFn: async () => {
+      const response = await axiosInstance.get(`/tasks/${id}/applications/`)
+      return response.data?.results || response.data || []
+    },
+    enabled: !!user && taskResponse?.creator?.id === user?.id,
   })
+
+  const task = taskResponse
+  const applications = Array.isArray(applicationsResponse) ? applicationsResponse : []
+
+  // Check if user has already applied
+  const hasApplied = applications.some((app: any) => app.applicant === user?.id)
 
   const applyMutation = useMutation({
     mutationFn: (data: { message: string }) =>
       axiosInstance.post(`/tasks/${id}/apply/`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['task', id] })
+      queryClient.invalidateQueries({ queryKey: ['task-applications', id] })
       setIsApplyOpen(false)
       setApplyMessage('')
+      showToast.success('Application Submitted!', {
+        description: 'Your application has been sent to the task creator.'
+      })
+    },
+    onError: (error: any) => {
+      showToast.error('Application Failed', {
+        description: error.response?.data?.detail || 'Failed to submit application'
+      })
     },
   })
 
   const deleteMutation = useMutation({
     mutationFn: () => axiosInstance.delete(`/tasks/${id}/`),
     onSuccess: () => {
+      showToast.success('Task Deleted', {
+        description: 'Task has been deleted successfully.'
+      })
       navigate('/tasks')
     },
   })
 
+  const acceptApplicationMutation = useMutation({
+    mutationFn: (applicationId: number) =>
+      axiosInstance.post(`/tasks/applications/${applicationId}/accept/`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', id] })
+      queryClient.invalidateQueries({ queryKey: ['task-applications', id] })
+      showToast.success('Application Accepted', {
+        description: 'You have accepted this application.'
+      })
+    },
+  })
+
+  const rejectApplicationMutation = useMutation({
+    mutationFn: (applicationId: number) =>
+      axiosInstance.post(`/tasks/applications/${applicationId}/reject/`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task', id] })
+      queryClient.invalidateQueries({ queryKey: ['task-applications', id] })
+      showToast.success('Application Rejected', {
+        description: 'You have rejected this application.'
+      })
+    },
+  })
+
   const handleApply = () => {
+    if (!applyMessage.trim()) {
+      showToast.error('Message Required', {
+        description: 'Please write a message explaining why you are a good fit.'
+      })
+      return
+    }
     applyMutation.mutate({ message: applyMessage })
   }
 
@@ -79,15 +136,15 @@ const TaskDetail = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
-        return 'bg-green-100 text-green-700'
+        return 'bg-green-500/10 text-green-700'
       case 'in_progress':
-        return 'bg-blue-100 text-blue-700'
+        return 'bg-blue-500/10 text-blue-700'
       case 'completed':
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-gray-500/10 text-gray-700'
       case 'cancelled':
-        return 'bg-red-100 text-red-700'
+        return 'bg-red-500/10 text-red-700'
       default:
-        return 'bg-gray-100 text-gray-700'
+        return 'bg-gray-500/10 text-gray-700'
     }
   }
 
@@ -99,10 +156,10 @@ const TaskDetail = () => {
     )
   }
 
-  if (!task?.data) {
+  if (!task) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold mb-4">Task not found</h2>
+        <h2 className="text-2xl font-bold mb-4 text-foreground">Task not found</h2>
         <Link to="/tasks">
           <Button>Back to Tasks</Button>
         </Link>
@@ -110,13 +167,12 @@ const TaskDetail = () => {
     )
   }
 
-  const isCreator = user?.id === task.data.creator.id
-  const hasApplied = task.data.applications?.some((app: any) => app.applicant === user?.id)
+  const isCreator = user?.id === task.creator?.id
 
   return (
     <div className="space-y-6">
       {/* Back button */}
-      <Link to="/tasks" className="inline-flex items-center gap-2 text-gray-600 hover:text-primary transition">
+      <Link to="/tasks" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition">
         <ArrowLeft className="h-4 w-4" />
         Back to Tasks
       </Link>
@@ -125,12 +181,12 @@ const TaskDetail = () => {
       <div className="grid gap-6 md:grid-cols-3">
         {/* Left column - Task details */}
         <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl mb-2">{task.data.title}</CardTitle>
-                <span className={`text-sm px-3 py-1 rounded-full ${getStatusColor(task.data.status)}`}>
-                  {task.data.status.replace('_', ' ')}
+          <Card className="border-border">
+            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
+              <div className="flex-1">
+                <CardTitle className="text-2xl mb-2 text-foreground">{task.title}</CardTitle>
+                <span className={`text-xs px-3 py-1 rounded-full ${getStatusColor(task.status)}`}>
+                  {task.status.replace('_', ' ')}
                 </span>
               </div>
               {isCreator && (
@@ -148,10 +204,10 @@ const TaskDetail = () => {
                         Delete
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="bg-card border-border">
                       <DialogHeader>
-                        <DialogTitle>Delete Task</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-foreground">Delete Task</DialogTitle>
+                        <DialogDescription className="text-muted-foreground">
                           Are you sure you want to delete this task? This action cannot be undone.
                         </DialogDescription>
                       </DialogHeader>
@@ -169,35 +225,35 @@ const TaskDetail = () => {
               )}
             </CardHeader>
             <CardContent className="space-y-6">
-              <p className="text-gray-700">{task.data.description}</p>
+              <p className="text-muted-foreground">{task.description}</p>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <DollarSign className="h-5 w-5" />
                   <div>
-                    <p className="text-sm text-gray-500">Budget</p>
-                    <p className="font-semibold text-primary">${task.data.budget}</p>
+                    <p className="text-sm text-muted-foreground">Budget</p>
+                    <p className="font-semibold text-primary">₦{task.budget?.toLocaleString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="h-5 w-5" />
                   <div>
-                    <p className="text-sm text-gray-500">Location</p>
-                    <p className="font-semibold">{task.data.location}</p>
+                    <p className="text-sm text-muted-foreground">Location</p>
+                    <p className="font-semibold text-foreground">{task.location}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="h-5 w-5" />
                   <div>
-                    <p className="text-sm text-gray-500">Posted</p>
-                    <p className="font-semibold">{new Date(task.data.created_at).toLocaleDateString()}</p>
+                    <p className="text-sm text-muted-foreground">Posted</p>
+                    <p className="font-semibold text-foreground">{new Date(task.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Clock className="h-5 w-5" />
                   <div>
-                    <p className="text-sm text-gray-500">Category</p>
-                    <p className="font-semibold capitalize">{task.data.category}</p>
+                    <p className="text-sm text-muted-foreground">Category</p>
+                    <p className="font-semibold text-foreground capitalize">{task.category}</p>
                   </div>
                 </div>
               </div>
@@ -205,36 +261,46 @@ const TaskDetail = () => {
           </Card>
 
           {/* Applications section - only visible to creator */}
-          {isCreator && applications?.data && applications.data.length > 0 && (
-            <Card>
+          {isCreator && applications.length > 0 && (
+            <Card className="border-border">
               <CardHeader>
-                <CardTitle>Applications ({applications.data.length})</CardTitle>
+                <CardTitle className="text-foreground">Applications ({applications.length})</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {applications.data.map((application) => (
-                  <div key={application.id} className="border rounded-lg p-4">
+                {applications.map((application: any) => (
+                  <div key={application.id} className="border border-border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center">
                           <User className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="font-medium">{application.applicant.username}</span>
+                        <span className="font-medium text-foreground">{application.applicant?.username}</span>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        application.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                        application.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                        'bg-red-100 text-red-700'
+                        application.status === 'pending' ? 'bg-yellow-500/10 text-yellow-700' :
+                        application.status === 'accepted' ? 'bg-green-500/10 text-green-700' :
+                        'bg-red-500/10 text-red-700'
                       }`}>
                         {application.status}
                       </span>
                     </div>
-                    <p className="text-gray-600 text-sm mb-3">{application.message}</p>
+                    <p className="text-muted-foreground text-sm mb-3">{application.message}</p>
                     {application.status === 'pending' && (
                       <div className="flex gap-2">
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                        <Button 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => acceptApplicationMutation.mutate(application.id)}
+                          disabled={acceptApplicationMutation.isPending}
+                        >
                           Accept
                         </Button>
-                        <Button size="sm" variant="destructive">
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => rejectApplicationMutation.mutate(application.id)}
+                          disabled={rejectApplicationMutation.isPending}
+                        >
                           Reject
                         </Button>
                       </div>
@@ -248,9 +314,9 @@ const TaskDetail = () => {
 
         {/* Right column - Creator info and actions */}
         <div className="space-y-6">
-          <Card>
+          <Card className="border-border">
             <CardHeader>
-              <CardTitle>Posted by</CardTitle>
+              <CardTitle className="text-foreground">Posted by</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3 mb-4">
@@ -258,15 +324,20 @@ const TaskDetail = () => {
                   <User className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold">{task.data.creator.username}</p>
-                  <p className="text-sm text-gray-500">Member since {new Date(task.data.creator.date_joined || '').getFullYear()}</p>
+                  <p className="font-semibold text-foreground">{task.creator?.username}</p>
+                  <p className="text-sm text-muted-foreground">Member since {new Date(task.creator?.date_joined || '').getFullYear()}</p>
                 </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Briefcase className="h-4 w-4" />
+                <span>{task.creator?.tasks_count || 0} tasks posted</span>
               </div>
             </CardContent>
           </Card>
 
-          {!isCreator && task.data.status === 'open' && !hasApplied && (
-            <Card>
+          {/* Apply Button - Visible for non-creators when task is open and not applied */}
+          {!isCreator && task.status === 'open' && !hasApplied && (
+            <Card className="border-border">
               <CardContent className="p-6">
                 <Dialog open={isApplyOpen} onOpenChange={setIsApplyOpen}>
                   <DialogTrigger asChild>
@@ -275,10 +346,10 @@ const TaskDetail = () => {
                       Apply for this Task
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="bg-card border-border">
                     <DialogHeader>
-                      <DialogTitle>Apply for Task</DialogTitle>
-                      <DialogDescription>
+                      <DialogTitle className="text-foreground">Apply for Task</DialogTitle>
+                      <DialogDescription className="text-muted-foreground">
                         Send a message to the task creator explaining why you're the best fit for this task.
                       </DialogDescription>
                     </DialogHeader>
@@ -288,18 +359,69 @@ const TaskDetail = () => {
                         value={applyMessage}
                         onChange={(e) => setApplyMessage(e.target.value)}
                         rows={5}
+                        className="bg-background border-border text-foreground"
                       />
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setIsApplyOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleApply} disabled={!applyMessage.trim()}>
-                        Submit Application
+                      <Button 
+                        onClick={handleApply} 
+                        disabled={!applyMessage.trim() || applyMutation.isPending}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        {applyMutation.isPending ? 'Submitting...' : 'Submit Application'}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Already Applied Message */}
+          {!isCreator && task.status === 'open' && hasApplied && (
+            <Card className="border-border bg-green-500/10">
+              <CardContent className="p-6 text-center">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                <h3 className="font-semibold text-foreground mb-1">Application Submitted!</h3>
+                <p className="text-sm text-muted-foreground">
+                  You have already applied for this task. The creator will review your application.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Task Status Message */}
+          {task.status !== 'open' && !isCreator && (
+            <Card className="border-border bg-muted">
+              <CardContent className="p-6 text-center">
+                {task.status === 'in_progress' ? (
+                  <>
+                    <Clock className="h-12 w-12 text-blue-500 mx-auto mb-3" />
+                    <h3 className="font-semibold text-foreground mb-1">Task In Progress</h3>
+                    <p className="text-sm text-muted-foreground">
+                      This task is currently being worked on and is not accepting new applications.
+                    </p>
+                  </>
+                ) : task.status === 'completed' ? (
+                  <>
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                    <h3 className="font-semibold text-foreground mb-1">Task Completed</h3>
+                    <p className="text-sm text-muted-foreground">
+                      This task has been completed and is no longer accepting applications.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-12 w-12 text-red-500 mx-auto mb-3" />
+                    <h3 className="font-semibold text-foreground mb-1">Task Cancelled</h3>
+                    <p className="text-sm text-muted-foreground">
+                      This task has been cancelled and is no longer available.
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           )}
