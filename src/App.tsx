@@ -10,7 +10,9 @@ import LandingPage from './pages/landing-page/LandingPage'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import Dashboard from './pages/dashboard/Dashboard'
+import MyTasks from './pages/tasks/MyTasks'
 import Tasks from './pages/tasks/Tasks'
+import EditTask from './pages/tasks/EditTask'
 import TaskDetail from './pages/tasks/TaskDetail'
 import CreateTask from './pages/tasks/CreateTask'
 import Campaigns from './pages/campaigns/Campaigns'
@@ -57,9 +59,11 @@ function AppContent() {
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/my-tasks" element={<MyTasks />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/tasks/:id" element={<TaskDetail />} />
             <Route path="/tasks/create" element={<CreateTask />} />
+            <Route path="/tasks/:id/edit" element={<EditTask />} />
             <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/campaigns/:id" element={<CampaignDetail />} />
             <Route path="/campaigns/create" element={<CreateCampaign />} />

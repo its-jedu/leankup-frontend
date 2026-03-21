@@ -9,7 +9,8 @@ import {
   Settings,
   HelpCircle,
   X,
-  LogOut
+  LogOut,
+  UserCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -22,7 +23,8 @@ interface DashboardSidebarProps {
 
 const navItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { name: 'Tasks', path: '/tasks', icon: Briefcase },
+  { name: 'My Tasks', path: '/my-tasks', icon: Briefcase },
+  { name: 'All Tasks', path: '/tasks', icon: Briefcase },
   { name: 'Campaigns', path: '/campaigns', icon: Target },
   { name: 'Wallet', path: '/wallet', icon: Wallet },
   { name: 'Community', path: '/community', icon: Users },

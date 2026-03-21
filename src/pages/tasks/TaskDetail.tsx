@@ -15,7 +15,7 @@ import {
 import { Textarea } from '../../components/ui/textarea'
 import { useAuth } from '../../hooks/useAuth'
 import axiosInstance from '../../lib/axios'
-import { Task, Application } from '../../types'
+import { Task } from '../../types'
 import { 
   MapPin, 
   DollarSign, 
@@ -28,9 +28,22 @@ import {
   Edit,
   Trash2,
   Send,
-  Briefcase
+  Briefcase,
+  MessageCircle,
+  Star
 } from 'lucide-react'
 import { showToast } from '@/lib/toast'
+import PosterProfileModal from '@/components/poster/PosterProfileModal'
+import ChatRoom from '@/components/chat//ChatRoom'
+
+interface Application {
+  id: number
+  applicant: number
+  applicant_username: string
+  message: string
+  status: string
+  created_at: string
+}
 
 const TaskDetail = () => {
   const { id } = useParams<{ id: string }>()
@@ -40,6 +53,9 @@ const TaskDetail = () => {
   const [applyMessage, setApplyMessage] = useState('')
   const [isApplyOpen, setIsApplyOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showChatRoom, setShowChatRoom] = useState(false)
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
 
   // Fetch task details
   const { data: taskResponse, isLoading } = useQuery({
@@ -50,8 +66,8 @@ const TaskDetail = () => {
     },
   })
 
-  // Fetch applications (only for creator)
-  const { data: applicationsResponse } = useQuery({
+  // Fetch applications
+  const { data: applicationsResponse, refetch: refetchApplications } = useQuery({
     queryKey: ['task-applications', id],
     queryFn: async () => {
       const response = await axiosInstance.get(`/tasks/${id}/applications/`)
@@ -60,11 +76,27 @@ const TaskDetail = () => {
     enabled: !!user && taskResponse?.creator?.id === user?.id,
   })
 
+  // Fetch user stats for poster
+  const { data: userStats } = useQuery({
+    queryKey: ['user-stats', taskResponse?.creator?.id],
+    queryFn: async () => {
+      const tasksRes = await axiosInstance.get('/tasks/', { params: { creator: taskResponse?.creator?.id } })
+      const tasks = tasksRes.data?.results || tasksRes.data || []
+      return {
+        totalTasks: tasks.length,
+        completedTasks: tasks.filter((t: any) => t.status === 'completed').length,
+      }
+    },
+    enabled: !!taskResponse?.creator?.id,
+  })
+
   const task = taskResponse
   const applications = Array.isArray(applicationsResponse) ? applicationsResponse : []
 
   // Check if user has already applied
-  const hasApplied = applications.some((app: any) => app.applicant === user?.id)
+  const userApplication = applications.find((app: any) => app.applicant === user?.id)
+  const hasApplied = !!userApplication
+  const isApplicationAccepted = userApplication?.status === 'accepted'
 
   const applyMutation = useMutation({
     mutationFn: (data: { message: string }) =>
@@ -75,8 +107,10 @@ const TaskDetail = () => {
       setIsApplyOpen(false)
       setApplyMessage('')
       showToast.success('Application Submitted!', {
-        description: 'Your application has been sent to the task creator.'
+        description: 'Your application has been sent. The task creator will be notified.'
       })
+      
+      // Notify task creator (in real app, this would be a WebSocket or backend notification)
     },
     onError: (error: any) => {
       showToast.error('Application Failed', {
@@ -98,12 +132,14 @@ const TaskDetail = () => {
   const acceptApplicationMutation = useMutation({
     mutationFn: (applicationId: number) =>
       axiosInstance.post(`/tasks/applications/${applicationId}/accept/`),
-    onSuccess: () => {
+    onSuccess: (_, applicationId) => {
       queryClient.invalidateQueries({ queryKey: ['task', id] })
       queryClient.invalidateQueries({ queryKey: ['task-applications', id] })
+      const acceptedApp = applications.find((a: any) => a.id === applicationId)
       showToast.success('Application Accepted', {
-        description: 'You have accepted this application.'
+        description: `You have accepted ${acceptedApp?.applicant_username}'s application. They have been notified.`
       })
+      refetchApplications()
     },
   })
 
@@ -113,9 +149,8 @@ const TaskDetail = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['task', id] })
       queryClient.invalidateQueries({ queryKey: ['task-applications', id] })
-      showToast.success('Application Rejected', {
-        description: 'You have rejected this application.'
-      })
+      showToast.info('Application Rejected')
+      refetchApplications()
     },
   })
 
@@ -274,7 +309,7 @@ const TaskDetail = () => {
                         <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center">
                           <User className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="font-medium text-foreground">{application.applicant?.username}</span>
+                        <span className="font-medium text-foreground">{application.applicant_username}</span>
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         application.status === 'pending' ? 'bg-yellow-500/10 text-yellow-700' :
@@ -305,6 +340,20 @@ const TaskDetail = () => {
                         </Button>
                       </div>
                     )}
+                    {application.status === 'accepted' && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedApplication(application)
+                          setShowChatRoom(true)
+                        }}
+                        className="mt-2"
+                      >
+                        <MessageCircle className="h-3 w-3 mr-1" />
+                        Start Chat
+                      </Button>
+                    )}
                   </div>
                 ))}
               </CardContent>
@@ -314,7 +363,7 @@ const TaskDetail = () => {
 
         {/* Right column - Creator info and actions */}
         <div className="space-y-6">
-          <Card className="border-border">
+          <Card className="border-border cursor-pointer hover:shadow-lg transition" onClick={() => setShowProfileModal(true)}>
             <CardHeader>
               <CardTitle className="text-foreground">Posted by</CardTitle>
             </CardHeader>
@@ -325,17 +374,29 @@ const TaskDetail = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-foreground">{task.creator?.username}</p>
-                  <p className="text-sm text-muted-foreground">Member since {new Date(task.creator?.date_joined || '').getFullYear()}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Member since {new Date(task.creator?.date_joined || '').getFullYear()}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Briefcase className="h-4 w-4" />
-                <span>{task.creator?.tasks_count || 0} tasks posted</span>
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Briefcase className="h-4 w-4" />
+                  <span>{userStats?.totalTasks || 0} tasks posted</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span>{userStats?.completedTasks || 0} completed</span>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-1 text-xs text-primary">
+                <Star className="h-3 w-3" />
+                <span>Click to view full profile</span>
               </div>
             </CardContent>
           </Card>
 
-          {/* Apply Button - Visible for non-creators when task is open and not applied */}
+          {/* Apply Button - For non-creators */}
           {!isCreator && task.status === 'open' && !hasApplied && (
             <Card className="border-border">
               <CardContent className="p-6">
@@ -380,21 +441,49 @@ const TaskDetail = () => {
             </Card>
           )}
 
-          {/* Already Applied Message */}
-          {!isCreator && task.status === 'open' && hasApplied && (
-            <Card className="border-border bg-green-500/10">
+          {/* Already Applied State */}
+          {!isCreator && hasApplied && !isApplicationAccepted && (
+            <Card className="border-border bg-yellow-500/10">
               <CardContent className="p-6 text-center">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                <Clock className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
                 <h3 className="font-semibold text-foreground mb-1">Application Submitted!</h3>
                 <p className="text-sm text-muted-foreground">
-                  You have already applied for this task. The creator will review your application.
+                  Your application is pending review. The task creator will notify you once a decision is made.
                 </p>
               </CardContent>
             </Card>
           )}
 
-          {/* Task Status Message */}
-          {task.status !== 'open' && !isCreator && (
+          {/* Application Accepted State */}
+          {!isCreator && isApplicationAccepted && (
+            <Card className="border-border bg-green-500/10">
+              <CardContent className="p-6 text-center">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                <h3 className="font-semibold text-foreground mb-1">Application Accepted!</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Great news! Your application has been accepted.
+                </p>
+                <Button 
+                  onClick={() => setShowChatRoom(true)}
+                  className="w-full"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Open Chat
+                </Button>
+                <a
+                  href={`https://wa.me/?text=I'm interested in the task: ${task.title}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-3"
+                >
+                  Continue on WhatsApp
+                </a>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Task Status Messages */}
+          {task.status !== 'open' && !isCreator && !hasApplied && (
             <Card className="border-border bg-muted">
               <CardContent className="p-6 text-center">
                 {task.status === 'in_progress' ? (
@@ -427,6 +516,25 @@ const TaskDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Poster Profile Modal */}
+      <PosterProfileModal
+        open={showProfileModal}
+        onOpenChange={setShowProfileModal}
+        userId={task.creator?.id}
+        username={task.creator?.username}
+      />
+
+      {/* Chat Room */}
+      {showChatRoom && (
+        <ChatRoom
+          taskId={parseInt(id!)}
+          taskTitle={task.title}
+          otherUserId={isCreator ? (userApplication?.applicant || 0) : task.creator?.id}
+          otherUsername={isCreator ? (userApplication?.applicant_username || '') : task.creator?.username}
+          onClose={() => setShowChatRoom(false)}
+        />
+      )}
     </div>
   )
 }
