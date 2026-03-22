@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Send, MessageCircle, X, ExternalLink } from 'lucide-react'
+import { Send, MessageCircle, X, ExternalLink, Phone } from 'lucide-react'
 import axiosInstance from '@/lib/axios'
 import { useAuth } from '@/hooks/useAuth'
 import { showToast } from '@/lib/toast'
@@ -28,29 +28,48 @@ interface ChatRoomProps {
 const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: ChatRoomProps) => {
   const { user } = useAuth()
   const [newMessage, setNewMessage] = useState('')
+  const [whatsappNumber, setWhatsappNumber] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
+
+  // Fetch other user's profile to get WhatsApp number
+  const { data: otherUserProfile } = useQuery({
+    queryKey: ['user-profile', otherUserId],
+    queryFn: async () => {
+      const response = await axiosInstance.get(`/users/${otherUserId}/profile/`)
+      return response.data
+    },
+    enabled: !!otherUserId,
+  })
+
+  useEffect(() => {
+    if (otherUserProfile?.whatsapp_number) {
+      setWhatsappNumber(otherUserProfile.whatsapp_number)
+    }
+  }, [otherUserProfile])
 
   // Fetch messages
   const { data: messages, isLoading } = useQuery({
     queryKey: ['chat-messages', taskId],
     queryFn: async () => {
       const response = await axiosInstance.get(`/tasks/${taskId}/messages/`)
-      return response.data?.results || response.data || []
+      return response.data || []
     },
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: 3000, // Poll every 3 seconds
   })
 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) =>
-      axiosInstance.post(`/tasks/${taskId}/messages/`, { content }),
+      axiosInstance.post(`/tasks/${taskId}/send-message/`, { content }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chat-messages', taskId] })
       setNewMessage('')
     },
-    onError: () => {
-      showToast.error('Failed to send message')
+    onError: (error: any) => {
+      showToast.error('Failed to send message', {
+        description: error.response?.data?.error || 'Please try again'
+      })
     },
   })
 
@@ -69,6 +88,15 @@ const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: Ch
     return name?.slice(0, 2).toUpperCase() || 'U'
   }
 
+  // WhatsApp link
+  const getWhatsAppLink = () => {
+    if (whatsappNumber) {
+      const cleanNumber = whatsappNumber.replace(/\D/g, '')
+      return `https://wa.me/${cleanNumber}?text=Hi! I'm interested in discussing the task: ${taskTitle}`
+    }
+    return null
+  }
+
   return (
     <Card className="fixed bottom-4 right-4 w-80 sm:w-96 h-96 shadow-2xl z-50 flex flex-col border-border">
       <CardHeader className="py-3 px-4 flex flex-row items-center justify-between border-b border-border">
@@ -76,9 +104,22 @@ const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: Ch
           <MessageCircle className="h-4 w-4 text-primary" />
           <CardTitle className="text-sm font-medium text-foreground">Chat: {taskTitle}</CardTitle>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          {getWhatsAppLink() && (
+            <a
+              href={getWhatsAppLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 hover:bg-muted rounded transition"
+              title="Continue on WhatsApp"
+            >
+              <Phone className="h-4 w-4 text-green-500" />
+            </a>
+          )}
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
       
       <CardContent className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -91,6 +132,11 @@ const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: Ch
             <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No messages yet</p>
             <p className="text-xs">Start the conversation!</p>
+            {!getWhatsAppLink() && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Tip: Ask the other user to add their WhatsApp number in Settings for easier chat
+              </p>
+            )}
           </div>
         ) : (
           messages?.map((msg: Message) => (
@@ -131,22 +177,32 @@ const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: Ch
           onKeyPress={(e) => e.key === 'Enter' && handleSend()}
           className="flex-1 bg-background border-border text-foreground"
         />
-        <Button size="icon" onClick={handleSend} disabled={!newMessage.trim()}>
-          <Send className="h-4 w-4" />
+        <Button 
+          size="icon" 
+          onClick={handleSend} 
+          disabled={!newMessage.trim() || sendMessageMutation.isPending}
+        >
+          {sendMessageMutation.isPending ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
         </Button>
       </div>
       
-      <div className="p-2 border-t border-border bg-muted/30 text-center">
-        <a
-          href={`https://wa.me/?text=Regarding task: ${taskTitle}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-        >
-          <ExternalLink className="h-3 w-3" />
-          Continue chat on WhatsApp
-        </a>
-      </div>
+      {getWhatsAppLink() && (
+        <div className="p-2 border-t border-border bg-muted/30 text-center">
+          <a
+            href={getWhatsAppLink()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Continue chat on WhatsApp
+          </a>
+        </div>
+      )}
     </Card>
   )
 }

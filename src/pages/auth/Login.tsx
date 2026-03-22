@@ -175,7 +175,7 @@ const Login = () => {
               </motion.div>
 
               {/* Demo Credentials */}
-              <motion.div
+              {/* <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
@@ -198,7 +198,7 @@ const Login = () => {
                     <span className="text-foreground font-medium">Jedu1122</span>
                   </div>
                 </div>
-              </motion.div>
+              </motion.div> */}
             </form>
 
             {/* Divider */}

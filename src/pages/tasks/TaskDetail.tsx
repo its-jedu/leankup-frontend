@@ -34,7 +34,10 @@ import {
 } from 'lucide-react'
 import { showToast } from '@/lib/toast'
 import PosterProfileModal from '@/components/poster/PosterProfileModal'
-import ChatRoom from '@/components/chat//ChatRoom'
+import ChatRoom from '@/components/chat/ChatRoom'
+import PaymentProofUpload from '@/components/tasks/PaymentProofUpload'
+import PaymentProofList from '@/components/tasks/PaymentProofList'
+import EscrowManager from '@/components/tasks/EscrowManager'
 
 interface Application {
   id: number
@@ -109,8 +112,6 @@ const TaskDetail = () => {
       showToast.success('Application Submitted!', {
         description: 'Your application has been sent. The task creator will be notified.'
       })
-      
-      // Notify task creator (in real app, this would be a WebSocket or backend notification)
     },
     onError: (error: any) => {
       showToast.error('Application Failed', {
@@ -171,15 +172,15 @@ const TaskDetail = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
-        return 'bg-green-500/10 text-green-700'
+        return 'bg-green-500/10 text-green-700 dark:text-green-400'
       case 'in_progress':
-        return 'bg-blue-500/10 text-blue-700'
+        return 'bg-blue-500/10 text-blue-700 dark:text-blue-400'
       case 'completed':
-        return 'bg-gray-500/10 text-gray-700'
+        return 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
       case 'cancelled':
-        return 'bg-red-500/10 text-red-700'
+        return 'bg-red-500/10 text-red-700 dark:text-red-400'
       default:
-        return 'bg-gray-500/10 text-gray-700'
+        return 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
     }
   }
 
@@ -481,6 +482,35 @@ const TaskDetail = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Payment Proof Upload - Only show when task is in progress */}
+          {task.status === 'in_progress' && (
+            <PaymentProofUpload
+              taskId={parseInt(id!)}
+              taskTitle={task.title}
+              taskBudget={task.budget}
+              isPoster={isCreator}
+              isAcceptedApplicant={isApplicationAccepted}
+            />
+          )}
+
+          {/* Escrow Manager */}
+          <EscrowManager
+            taskId={parseInt(id!)}
+            taskTitle={task.title}
+            taskBudget={task.budget}
+            taskStatus={task.status}
+            isPoster={isCreator}
+            isAcceptedApplicant={isApplicationAccepted}
+          />
+
+          {/* Payment Proofs List */}
+          <PaymentProofList
+            taskId={parseInt(id!)}
+            taskTitle={task.title}
+            isPoster={isCreator}
+            isAcceptedApplicant={isApplicationAccepted}
+          />
 
           {/* Task Status Messages */}
           {task.status !== 'open' && !isCreator && !hasApplied && (
