@@ -56,17 +56,26 @@ const MyTasks = () => {
   const [newMessage, setNewMessage] = useState('')
   const [sendingMessage, setSendingMessage] = useState(false)
 
-  // Fetch tasks posted by user
+  // Fetch tasks posted by user - FIXED: filter by creator ID
   const { data: postedTasksData, isLoading: postedLoading, refetch: refetchPosted } = useQuery({
     queryKey: ['my-posted-tasks', searchTerm, category, status, user?.id],
     queryFn: async () => {
       let url = '/tasks/?'
-      const params: string[] = [`creator=${user?.id}`]
+      const params: string[] = []
+      
+      // Filter by creator (current user)
+      if (user?.id) {
+        params.push(`creator=${user.id}`)
+      }
+      
       if (searchTerm) params.push(`search=${searchTerm}`)
       if (category && category !== 'all') params.push(`category=${category}`)
       if (status && status !== 'all') params.push(`status=${status}`)
+      
       url += params.join('&')
+      console.log('Fetching posted tasks with URL:', url)
       const response = await axiosInstance.get(url)
+      // Handle paginated response
       return response.data?.results || response.data || []
     },
     enabled: !!user && activeTab === 'posted',
@@ -96,7 +105,7 @@ const MyTasks = () => {
   const handleDelete = async (taskId: number) => {
     if (confirm('Are you sure you want to delete this task?')) {
       try {
-        await axiosInstance.delete(`/tasks/${taskId}/`)
+        await axiosInstance.delete(`/tasks/${taskId}/delete_task/`)
         showToast.success('Task deleted successfully')
         refetchPosted()
       } catch (error) {
@@ -354,21 +363,25 @@ const MyTasks = () => {
                             View
                           </Button>
                         </Link>
-                        <Link to={`/tasks/${task.id}/edit`}>
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <Edit className="h-3 w-3" />
-                            Edit
+                        {task.status === 'open' && (
+                          <Link to={`/tasks/${task.id}/edit`}>
+                            <Button variant="outline" size="sm" className="gap-1">
+                              <Edit className="h-3 w-3" />
+                              Edit
+                            </Button>
+                          </Link>
+                        )}
+                        {(task.status === 'open' || task.status === 'cancelled') && (
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            className="gap-1"
+                            onClick={() => handleDelete(task.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Delete
                           </Button>
-                        </Link>
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
-                          className="gap-1"
-                          onClick={() => handleDelete(task.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Delete
-                        </Button>
+                        )}
                       </div>
                     </div>
                     {(task as any).applications_count > 0 && (
@@ -379,7 +392,7 @@ const MyTasks = () => {
                           </span>
                           <Link to={`/tasks/${task.id}`}>
                             <Button variant="ghost" size="sm" className="text-primary">
-                              View →
+                              View Applications →
                             </Button>
                           </Link>
                         </div>
