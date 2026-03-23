@@ -43,14 +43,7 @@ const bottomNavItems = [
 
 const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: DashboardSidebarProps) => {
   const location = useLocation()
-  const { logout, user } = useAuth()
-
-  const getInitials = () => {
-    if (user?.first_name && user?.last_name) {
-      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
-    }
-    return user?.username?.slice(0, 2).toUpperCase() || 'U'
-  }
+  const { logout } = useAuth()
 
   const SidebarLink = ({ item }: { item: typeof navItems[0] }) => {
     const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
@@ -76,7 +69,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
 
     if (isCollapsed && !isMobile) {
       return (
-        <TooltipProvider delayDuration={0}>
+        <TooltipProvider key={item.path} delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
               {linkContent}
@@ -121,26 +114,6 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
           </Button>
         )}
       </div>
-
-      {/* User Profile */}
-      {(!isCollapsed || isMobile) && (
-        <div className="p-4 mx-3 mt-4 rounded-xl bg-gradient-to-r from-primary/10 via-accent/5 to-secondary/10 border border-primary/20">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-sm">{getInitials()}</span>
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-foreground truncate">
-                {user?.first_name} {user?.last_name}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

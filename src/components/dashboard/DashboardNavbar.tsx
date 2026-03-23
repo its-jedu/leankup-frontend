@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Moon, Sun, Bell, CheckCheck, Menu, LogOut, Settings, Wallet } from 'lucide-react'
+import { Moon, Sun, Bell, CheckCheck, Menu, LogOut, Settings, Wallet, Briefcase, Target, Users } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,10 +102,8 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
 
   return (
     <nav className={cn(
-      "sticky top-0 z-40 transition-all duration-300",
-      isScrolled 
-        ? "bg-background/95 backdrop-blur-lg border-b border-border shadow-sm" 
-        : "bg-background border-b border-border"
+      "sticky top-0 z-40 transition-all duration-300 bg-background border-b border-border",
+      isScrolled && "shadow-sm"
     )}>
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
         {/* Left Section - Menu Button and Logo */}
@@ -118,7 +116,7 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <Link to="/dashboard" className="hidden md:flex items-center">
+          <Link to="/dashboard" className="flex items-center">
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               LeankUp
             </span>
@@ -127,11 +125,14 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
 
         {/* Center Section - Desktop Navigation */}
         <div className="hidden md:flex items-center gap-1">
-          <Link to="/tasks" className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all">
+          <Link to="/tasks" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all">
             Browse Tasks
           </Link>
-          <Link to="/campaigns" className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all">
+          <Link to="/campaigns" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all">
             Browse Campaigns
+          </Link>
+          <Link to="/community" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all">
+            Community
           </Link>
         </div>
 
@@ -160,9 +161,9 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-96 bg-card border-border shadow-xl rounded-xl p-0">
+            <DropdownMenuContent align="end" className="w-96 bg-popover border-border shadow-xl rounded-xl p-0">
               <div className="p-4 border-b border-border flex items-center justify-between">
-                <DropdownMenuLabel className="p-0 text-base font-semibold">Notifications</DropdownMenuLabel>
+                <DropdownMenuLabel className="p-0 text-base font-semibold text-foreground">Notifications</DropdownMenuLabel>
                 {unreadCount.unread_count > 0 && (
                   <Button 
                     variant="ghost" 
@@ -230,7 +231,7 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 bg-card border-border shadow-xl rounded-xl p-2">
+            <DropdownMenuContent align="end" className="w-64 bg-popover border-border shadow-xl rounded-xl p-2">
               <div className="p-3 border-b border-border">
                 <p className="text-sm font-semibold text-foreground">{user?.first_name} {user?.last_name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>

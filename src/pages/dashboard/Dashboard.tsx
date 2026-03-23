@@ -3,19 +3,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select'
-import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import { 
   Briefcase, 
   Target, 
@@ -26,17 +13,24 @@ import {
   Filter,
   Calendar,
   Users,
-  Star,
   ArrowRight,
   Sparkles,
-  SlidersHorizontal
+  SlidersHorizontal,
+  X
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Task, Campaign } from '@/types'
-import { formatDistanceToNow, format, isToday, isThisWeek, subHours, subDays } from 'date-fns'
+import { formatDistanceToNow, format, subHours, subDays, isToday, isThisWeek } from 'date-fns'
 import axiosInstance from '@/lib/axios'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface FilterOptions {
   category: string
@@ -49,6 +43,7 @@ interface FilterOptions {
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState<FilterOptions>({
     category: 'all',
     location: '',
@@ -57,7 +52,6 @@ const Dashboard = () => {
     timeFilter: 'all',
     status: 'all'
   })
-  const [activeTab, setActiveTab] = useState<'tasks' | 'campaigns'>('tasks')
 
   // Fetch tasks
   const { data: tasksData, isLoading: tasksLoading } = useQuery({
@@ -148,12 +142,12 @@ const Dashboard = () => {
   const campaigns = Array.isArray(campaignsData) ? campaignsData : []
 
   const categories = [
-    { value: 'all', label: 'All', icon: Sparkles },
-    { value: 'delivery', label: 'Delivery', icon: Briefcase },
-    { value: 'cleaning', label: 'Cleaning', icon: Sparkles },
-    { value: 'moving', label: 'Moving', icon: ArrowRight },
-    { value: 'repair', label: 'Repair', icon: Target },
-    { value: 'tutoring', label: 'Tutoring', icon: Users },
+    { value: 'all', label: 'All Categories' },
+    { value: 'delivery', label: 'Delivery' },
+    { value: 'cleaning', label: 'Cleaning' },
+    { value: 'moving', label: 'Moving' },
+    { value: 'repair', label: 'Repair' },
+    { value: 'tutoring', label: 'Tutoring' },
   ]
 
   const timeFilters = [
@@ -170,13 +164,11 @@ const Dashboard = () => {
     const date = new Date(createdAt)
     const now = new Date()
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / 60000)
-    const diffHours = Math.floor(diffMinutes / 60)
     
-    if (diffMinutes < 1) return { text: 'Just now', color: 'text-green-600 bg-green-100 dark:bg-green-900/30' }
-    if (diffMinutes < 5) return { text: `${diffMinutes} min ago`, color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30' }
-    if (diffHours < 1) return { text: `${diffMinutes} min ago`, color: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30' }
-    if (diffHours < 24) return { text: `${diffHours} hours ago`, color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30' }
-    return { text: formatDistanceToNow(date, { addSuffix: true }), color: 'text-gray-600 bg-gray-100 dark:bg-gray-800' }
+    if (diffMinutes < 1) return { text: 'Just now', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }
+    if (diffMinutes < 60) return { text: `${diffMinutes} min ago`, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }
+    if (diffMinutes < 1440) return { text: `${Math.floor(diffMinutes / 60)} hours ago`, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' }
+    return { text: formatDistanceToNow(date, { addSuffix: true }), color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' }
   }
 
   const resetFilters = () => {
@@ -191,191 +183,175 @@ const Dashboard = () => {
     setSearchQuery('')
   }
 
+  const hasActiveFilters = filters.category !== 'all' || filters.location || filters.minBudget || filters.maxBudget || filters.timeFilter !== 'all'
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            {activeTab === 'tasks' ? 'Available Tasks' : 'Active Campaigns'}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {activeTab === 'tasks' 
-              ? 'Find local tasks that match your skills and earn money'
-              : 'Support community projects and make a difference'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link to={activeTab === 'tasks' ? '/tasks/create' : '/campaigns/create'}>
-            <Button className="bg-primary hover:bg-primary/90 text-white">
-              {activeTab === 'tasks' ? (
-                <>
-                  <Briefcase className="mr-2 h-4 w-4" />
-                  Post a Task
-                </>
-              ) : (
-                <>
-                  <Target className="mr-2 h-4 w-4" />
-                  Start Campaign
-                </>
-              )}
-            </Button>
-          </Link>
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary/80 dark:from-primary dark:to-primary/70 p-8">
+        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              Find Opportunities in Your Community
+            </h1>
+            <p className="text-white/80 text-sm md:text-base">
+              Discover local tasks to earn money or support meaningful campaigns
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Link to="/tasks/create">
+              <Button className="bg-white text-primary hover:bg-white/90 shadow-lg">
+                <Briefcase className="mr-2 h-4 w-4" />
+                Post a Task
+              </Button>
+            </Link>
+            <Link to="/campaigns/create">
+              <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                <Target className="mr-2 h-4 w-4" />
+                Start Campaign
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Search and Filters Bar */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={`Search ${activeTab === 'tasks' ? 'tasks' : 'campaigns'}...`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 bg-card border-border"
-            />
-          </div>
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2 h-11">
-                <SlidersHorizontal className="h-4 w-4" />
-                Filters
-                {(filters.category !== 'all' || filters.location || filters.minBudget || filters.maxBudget || filters.timeFilter !== 'all') && (
-                  <Badge variant="secondary" className="ml-1 rounded-full px-1.5 h-5">
-                    •
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-4 bg-card border-border" align="end">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Category</label>
-                  <Select value={filters.category} onValueChange={(v) => setFilters({...filters, category: v})}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Location</label>
-                  <Input
-                    placeholder="Enter location..."
-                    value={filters.location}
-                    onChange={(e) => setFilters({...filters, location: e.target.value})}
-                    className="bg-background"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2">
+      {/* Search and Filter Bar */}
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tasks or campaigns..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-11 bg-background border-border"
+          />
+        </div>
+        <Button 
+          variant={showFilters || hasActiveFilters ? "default" : "outline"} 
+          onClick={() => setShowFilters(!showFilters)}
+          className="gap-2 h-11"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters
+          {hasActiveFilters && (
+            <Badge variant="secondary" className="ml-1 rounded-full px-1.5 h-5 bg-primary/20">
+              •
+            </Badge>
+          )}
+        </Button>
+      </div>
+
+      {/* Filters Panel */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <Card className="border-border bg-card">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Min Budget</label>
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={filters.minBudget}
-                      onChange={(e) => setFilters({...filters, minBudget: e.target.value})}
-                      className="bg-background"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Max Budget</label>
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={filters.maxBudget}
-                      onChange={(e) => setFilters({...filters, maxBudget: e.target.value})}
-                      className="bg-background"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Time Posted</label>
-                  <Select value={filters.timeFilter} onValueChange={(v) => setFilters({...filters, timeFilter: v})}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="All Time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {timeFilters.map((tf) => (
-                        <SelectItem key={tf.value} value={tf.value}>{tf.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {activeTab === 'tasks' && (
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Task Status</label>
-                    <Select value={filters.status} onValueChange={(v) => setFilters({...filters, status: v})}>
+                    <label className="text-sm font-medium mb-2 block">Category</label>
+                    <Select value={filters.category} onValueChange={(v) => setFilters({...filters, category: v})}>
                       <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="All Tasks" />
+                        <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Open Tasks</SelectItem>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                )}
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Location</label>
+                    <Input
+                      placeholder="Enter location..."
+                      value={filters.location}
+                      onChange={(e) => setFilters({...filters, location: e.target.value})}
+                      className="bg-background"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Time Posted</label>
+                    <Select value={filters.timeFilter} onValueChange={(v) => setFilters({...filters, timeFilter: v})}>
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="All Time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeFilters.map((tf) => (
+                          <SelectItem key={tf.value} value={tf.value}>{tf.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Min Budget</label>
+                      <Input
+                        type="number"
+                        placeholder="Min"
+                        value={filters.minBudget}
+                        onChange={(e) => setFilters({...filters, minBudget: e.target.value})}
+                        className="bg-background"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Max Budget</label>
+                      <Input
+                        type="number"
+                        placeholder="Max"
+                        value={filters.maxBudget}
+                        onChange={(e) => setFilters({...filters, maxBudget: e.target.value})}
+                        className="bg-background"
+                      />
+                    </div>
+                  </div>
+                </div>
                 
-                <Button variant="outline" size="sm" onClick={resetFilters} className="w-full">
-                  Reset Filters
-                </Button>
+                <div className="flex justify-end mt-4">
+                  <Button variant="outline" size="sm" onClick={resetFilters} className="gap-2">
+                    <X className="h-3 w-3" />
+                    Reset Filters
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content - Two Column Layout */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Available Tasks Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Briefcase className="h-5 w-5 text-primary" />
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-        
-        {/* Category Pills */}
-        <div className="flex flex-wrap gap-2">
-          {categories.map((cat) => (
-            <Button
-              key={cat.value}
-              variant={filters.category === cat.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilters({...filters, category: cat.value})}
-              className="rounded-full"
-            >
-              <cat.icon className="mr-1 h-3 w-3" />
-              {cat.label}
-            </Button>
-          ))}
-        </div>
-      </div>
+              <h2 className="text-lg font-semibold text-foreground">Available Tasks</h2>
+            </div>
+            <Link to="/tasks" className="text-sm text-primary hover:underline">
+              View All
+            </Link>
+          </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="tasks" onValueChange={(v) => setActiveTab(v as 'tasks' | 'campaigns')}>
-        <TabsList className="bg-muted/50 w-full max-w-xs">
-          <TabsTrigger value="tasks" className="flex-1 gap-2">
-            <Briefcase className="h-4 w-4" />
-            Available Tasks
-          </TabsTrigger>
-          <TabsTrigger value="campaigns" className="flex-1 gap-2">
-            <Target className="h-4 w-4" />
-            Active Campaigns
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tasks Tab */}
-        <TabsContent value="tasks" className="mt-6">
           {tasksLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : tasks.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="space-y-3">
               <AnimatePresence>
-                {tasks.map((task: Task, index: number) => {
+                {tasks.slice(0, 5).map((task: Task, index: number) => {
                   const timeBadge = getTimeBadge(task.created_at)
                   return (
                     <motion.div
@@ -386,32 +362,32 @@ const Dashboard = () => {
                       whileHover={{ x: 4 }}
                     >
                       <Link to={`/tasks/${task.id}`}>
-                        <Card className="hover:shadow-lg transition-all duration-300 border-border cursor-pointer">
-                          <CardContent className="p-5">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                              <div className="flex-1">
+                        <Card className="hover:shadow-lg transition-all duration-300 border-border cursor-pointer bg-card">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  <Badge variant="secondary" className="bg-primary/10 text-primary">
+                                  <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
                                     {task.category}
                                   </Badge>
-                                  <Badge className={timeBadge.color}>
+                                  <Badge className={`text-xs ${timeBadge.color}`}>
                                     <Clock className="mr-1 h-3 w-3" />
                                     {timeBadge.text}
                                   </Badge>
                                   {task.budget && (
-                                    <Badge variant="outline" className="border-green-200 text-green-600">
+                                    <Badge variant="outline" className="border-green-200 text-green-600 dark:border-green-800 dark:text-green-400 text-xs">
                                       <DollarSign className="mr-1 h-3 w-3" />
                                       ₦{task.budget.toLocaleString()}
                                     </Badge>
                                   )}
                                 </div>
-                                <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-1">
+                                <h3 className="font-semibold text-foreground mb-1 line-clamp-1">
                                   {task.title}
                                 </h3>
-                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                   {task.description}
                                 </p>
-                                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                   <div className="flex items-center gap-1">
                                     <MapPin className="h-3 w-3" />
                                     {task.location}
@@ -420,18 +396,12 @@ const Dashboard = () => {
                                     <Users className="h-3 w-3" />
                                     {task.applications?.length || 0} applicants
                                   </div>
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {format(new Date(task.created_at), 'MMM dd, yyyy')}
-                                  </div>
                                 </div>
                               </div>
-                              <div className="flex-shrink-0">
-                                <Button variant="outline" className="gap-2">
-                                  View Details
-                                  <ArrowRight className="h-4 w-4" />
-                                </Button>
-                              </div>
+                              <Button size="sm" variant="outline" className="shrink-0 gap-1 text-xs">
+                                Apply
+                                <ArrowRight className="h-3 w-3" />
+                              </Button>
                             </div>
                           </CardContent>
                         </Card>
@@ -442,28 +412,37 @@ const Dashboard = () => {
               </AnimatePresence>
             </div>
           ) : (
-            <Card className="border-border">
-              <CardContent className="py-12 text-center">
-                <Briefcase className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">No tasks found matching your criteria</p>
-                <Button variant="link" onClick={resetFilters} className="mt-2">
-                  Clear filters
-                </Button>
+            <Card className="border-border bg-card">
+              <CardContent className="py-8 text-center">
+                <Briefcase className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No tasks found</p>
               </CardContent>
             </Card>
           )}
-        </TabsContent>
+        </div>
 
-        {/* Campaigns Tab */}
-        <TabsContent value="campaigns" className="mt-6">
+        {/* Active Campaigns Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Active Campaigns</h2>
+            </div>
+            <Link to="/campaigns" className="text-sm text-primary hover:underline">
+              View All
+            </Link>
+          </div>
+
           {campaignsLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : campaigns.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="space-y-3">
               <AnimatePresence>
-                {campaigns.map((campaign: Campaign, index: number) => {
+                {campaigns.slice(0, 5).map((campaign: Campaign, index: number) => {
                   const progress = campaign.target_amount > 0 
                     ? (campaign.raised_amount / campaign.target_amount) * 100 
                     : 0
@@ -479,52 +458,55 @@ const Dashboard = () => {
                       whileHover={{ x: 4 }}
                     >
                       <Link to={`/campaigns/${campaign.id}`}>
-                        <Card className="hover:shadow-lg transition-all duration-300 border-border cursor-pointer">
-                          <CardContent className="p-5">
-                            <div className="flex flex-col md:flex-row gap-4">
-                              <div className="flex-1">
+                        <Card className="hover:shadow-lg transition-all duration-300 border-border cursor-pointer bg-card">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  <Badge variant="secondary" className="bg-primary/10 text-primary">
+                                  <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
                                     {campaign.category}
                                   </Badge>
-                                  <Badge className={timeBadge.color}>
+                                  <Badge className={`text-xs ${timeBadge.color}`}>
                                     <Clock className="mr-1 h-3 w-3" />
                                     {timeBadge.text}
                                   </Badge>
-                                  <Badge variant="outline" className="border-orange-200 text-orange-600">
-                                    <Target className="mr-1 h-3 w-3" />
+                                  <Badge variant="outline" className="border-orange-200 text-orange-600 dark:border-orange-800 dark:text-orange-400 text-xs">
                                     {progress.toFixed(0)}% Funded
                                   </Badge>
                                 </div>
-                                <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-1">
+                                <h3 className="font-semibold text-foreground mb-1 line-clamp-1">
                                   {campaign.title}
                                 </h3>
-                                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                   {campaign.description}
                                 </p>
-                                <div className="space-y-2">
-                                  <div className="flex justify-between text-sm">
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-xs">
                                     <span className="text-muted-foreground">Raised: ₦{campaign.raised_amount?.toLocaleString()}</span>
                                     <span className="text-muted-foreground">Goal: ₦{campaign.target_amount?.toLocaleString()}</span>
                                   </div>
-                                  <div className="w-full bg-muted rounded-full h-2">
+                                  <div className="w-full bg-muted rounded-full h-1.5">
                                     <div 
-                                      className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all duration-500"
+                                      className="bg-gradient-to-r from-primary to-accent h-1.5 rounded-full transition-all duration-500"
                                       style={{ width: `${Math.min(progress, 100)}%` }}
                                     />
                                   </div>
+                                  <div className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-1 text-muted-foreground">
+                                      <Calendar className="h-3 w-3" />
+                                      {daysLeft} days left
+                                    </div>
+                                    <div className="flex items-center gap-1 text-muted-foreground">
+                                      <Users className="h-3 w-3" />
+                                      {campaign.contributions?.length || 0} supporters
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="flex-shrink-0 flex flex-col items-end justify-between gap-2">
-                                <div className="text-right">
-                                  <p className="text-xs text-muted-foreground">Days Left</p>
-                                  <p className="text-lg font-semibold text-foreground">{daysLeft}</p>
-                                </div>
-                                <Button variant="outline" size="sm" className="gap-2">
-                                  Support Campaign
-                                  <ArrowRight className="h-3 w-3" />
-                                </Button>
-                              </div>
+                              <Button size="sm" variant="outline" className="shrink-0 gap-1 text-xs">
+                                Support
+                                <ArrowRight className="h-3 w-3" />
+                              </Button>
                             </div>
                           </CardContent>
                         </Card>
@@ -535,18 +517,15 @@ const Dashboard = () => {
               </AnimatePresence>
             </div>
           ) : (
-            <Card className="border-border">
-              <CardContent className="py-12 text-center">
-                <Target className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">No campaigns found matching your criteria</p>
-                <Button variant="link" onClick={resetFilters} className="mt-2">
-                  Clear filters
-                </Button>
+            <Card className="border-border bg-card">
+              <CardContent className="py-8 text-center">
+                <Target className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No campaigns found</p>
               </CardContent>
             </Card>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   )
 }
