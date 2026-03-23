@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
         showToast.error('Network Error', {
-          description: 'Cannot connect to server. Please check if backend is running.'
+          description: "Can't connect to server."
         });
       } else if (error.response?.status === 401) {
         localStorage.removeItem('access_token');
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
         showToast.error('Network Error', {
-          description: 'Cannot connect to server. Please check if backend is running.'
+          description: "Can't connect to server."
         });
       } else if (error.response?.status === 401) {
         showToast.error('Login Failed', {
@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
         showToast.error('Network Error', {
-          description: 'Cannot connect to server. Please check if backend is running.'
+          description: "Can't connect to server."
         });
       } else if (error.response?.status === 400) {
         const errorData = error.response?.data;
