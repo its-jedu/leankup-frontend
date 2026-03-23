@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from '../../components/ui/dialog'
 import { Textarea } from '../../components/ui/textarea'
+import { Input } from '../../components/ui/input'
 import { useAuth } from '../../hooks/useAuth'
 import axiosInstance from '../../lib/axios'
 import { Task } from '../../types'
@@ -30,14 +31,16 @@ import {
   Send,
   Briefcase,
   MessageCircle,
-  Star
+  Star,
+  Key,
+  Users,
+  Wallet
 } from 'lucide-react'
 import { showToast } from '@/lib/toast'
 import PosterProfileModal from '@/components/poster/PosterProfileModal'
 import ChatRoom from '@/components/chat/ChatRoom'
-import PaymentProofUpload from '@/components/tasks/PaymentProofUpload'
-import PaymentProofList from '@/components/tasks/PaymentProofList'
-import EscrowManager from '@/components/tasks/EscrowManager'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 
 interface Application {
   id: number
@@ -46,6 +49,21 @@ interface Application {
   message: string
   status: string
   created_at: string
+  applicant_profile?: any
+  applicant_stats?: any
+}
+
+interface EscrowInfo {
+  has_escrow: boolean
+  id?: number
+  amount?: string
+  status?: string
+  funded_at?: string
+  released_at?: string
+  completion_key?: string
+  poster_completed?: boolean
+  worker_completed?: boolean
+  can_complete?: boolean
 }
 
 const TaskDetail = () => {
@@ -59,9 +77,13 @@ const TaskDetail = () => {
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showChatRoom, setShowChatRoom] = useState(false)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [completionKey, setCompletionKey] = useState('')
+  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false)
+  const [selectedApplicants, setSelectedApplicants] = useState<number[]>([])
+  const [isAcceptDialogOpen, setIsAcceptDialogOpen] = useState(false)
 
   // Fetch task details
-  const { data: taskResponse, isLoading } = useQuery({
+  const { data: taskResponse, isLoading, refetch: refetchTask } = useQuery({
     queryKey: ['task', id],
     queryFn: async () => {
       const response = await axiosInstance.get(`/tasks/${id}/`)
@@ -74,7 +96,17 @@ const TaskDetail = () => {
     queryKey: ['task-applications', id],
     queryFn: async () => {
       const response = await axiosInstance.get(`/tasks/${id}/applications/`)
-      return response.data?.results || response.data || []
+      return response.data || []
+    },
+    enabled: !!user && taskResponse?.creator?.id === user?.id,
+  })
+
+  // Fetch escrow info
+  const { data: escrowInfo, refetch: refetchEscrow } = useQuery({
+    queryKey: ['task-escrow', id],
+    queryFn: async () => {
+      const response = await axiosInstance.get(`/tasks/${id}/escrow_info/`)
+      return response.data as EscrowInfo
     },
     enabled: !!user && taskResponse?.creator?.id === user?.id,
   })
@@ -100,6 +132,7 @@ const TaskDetail = () => {
   const userApplication = applications.find((app: any) => app.applicant === user?.id)
   const hasApplied = !!userApplication
   const isApplicationAccepted = userApplication?.status === 'accepted'
+  const isPoster = user?.id === task?.creator?.id
 
   const applyMutation = useMutation({
     mutationFn: (data: { message: string }) =>
@@ -114,44 +147,84 @@ const TaskDetail = () => {
       })
     },
     onError: (error: any) => {
-      showToast.error('Application Failed', {
-        description: error.response?.data?.detail || 'Failed to submit application'
-      })
+      if (error.response?.data?.already_applied) {
+        showToast.error('Already Applied', {
+          description: 'You have already applied to this task.'
+        })
+      } else {
+        showToast.error('Application Failed', {
+          description: error.response?.data?.detail || 'Failed to submit application'
+        })
+      }
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => axiosInstance.delete(`/tasks/${id}/`),
+    mutationFn: () => axiosInstance.delete(`/tasks/${id}/delete_task/`),
     onSuccess: () => {
       showToast.success('Task Deleted', {
         description: 'Task has been deleted successfully.'
       })
-      navigate('/tasks')
+      navigate('/my-tasks')
     },
-  })
-
-  const acceptApplicationMutation = useMutation({
-    mutationFn: (applicationId: number) =>
-      axiosInstance.post(`/tasks/applications/${applicationId}/accept/`),
-    onSuccess: (_, applicationId) => {
-      queryClient.invalidateQueries({ queryKey: ['task', id] })
-      queryClient.invalidateQueries({ queryKey: ['task-applications', id] })
-      const acceptedApp = applications.find((a: any) => a.id === applicationId)
-      showToast.success('Application Accepted', {
-        description: `You have accepted ${acceptedApp?.applicant_username}'s application. They have been notified.`
+    onError: (error: any) => {
+      showToast.error('Delete Failed', {
+        description: error.response?.data?.error || 'Failed to delete task'
       })
-      refetchApplications()
     },
   })
 
-  const rejectApplicationMutation = useMutation({
-    mutationFn: (applicationId: number) =>
-      axiosInstance.post(`/tasks/applications/${applicationId}/reject/`),
+  const acceptApplicationsMutation = useMutation({
+    mutationFn: (applicationIds: number[]) =>
+      axiosInstance.post(`/tasks/${id}/accept_applications/`, { application_ids: applicationIds }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['task', id] })
       queryClient.invalidateQueries({ queryKey: ['task-applications', id] })
-      showToast.info('Application Rejected')
+      setIsAcceptDialogOpen(false)
+      setSelectedApplicants([])
+      showToast.success('Applications Accepted', {
+        description: `Accepted ${selectedApplicants.length} application(s). Task is now in progress.`
+      })
       refetchApplications()
+      refetchTask()
+    },
+    onError: (error: any) => {
+      showToast.error('Accept Failed', {
+        description: error.response?.data?.error || 'Failed to accept applications'
+      })
+    },
+  })
+
+  const completeTaskMutation = useMutation({
+    mutationFn: (key: string) =>
+      axiosInstance.post(`/tasks/${id}/mark_complete/`, { completion_key: key }),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ['task', id] })
+      queryClient.invalidateQueries({ queryKey: ['task-escrow', id] })
+      setIsCompleteDialogOpen(false)
+      setCompletionKey('')
+      
+      if (response.data.poster_completed && response.data.worker_completed) {
+        showToast.success('Task Fully Completed!', {
+          description: 'Both parties have confirmed. Escrow has been released to the worker(s)!'
+        })
+      } else if (response.data.poster_completed) {
+        showToast.success('Task Marked Complete', {
+          description: 'You have marked this task as complete. Waiting for worker confirmation to release funds.'
+        })
+      } else if (response.data.worker_completed) {
+        showToast.success('Task Marked Complete', {
+          description: 'You have marked this task as complete. Waiting for poster confirmation to release funds.'
+        })
+      }
+      
+      refetchTask()
+      refetchEscrow()
+    },
+    onError: (error: any) => {
+      showToast.error('Completion Failed', {
+        description: error.response?.data?.error || 'Failed to mark task as complete'
+      })
     },
   })
 
@@ -169,6 +242,26 @@ const TaskDetail = () => {
     deleteMutation.mutate()
   }
 
+  const handleAcceptApplications = () => {
+    if (selectedApplicants.length === 0) {
+      showToast.error('No Applications Selected', {
+        description: 'Please select at least one application to accept.'
+      })
+      return
+    }
+    acceptApplicationsMutation.mutate(selectedApplicants)
+  }
+
+  const handleCompleteTask = () => {
+    if (!completionKey.trim()) {
+      showToast.error('Completion Key Required', {
+        description: 'Please enter the completion key to mark this task as complete.'
+      })
+      return
+    }
+    completeTaskMutation.mutate(completionKey)
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open':
@@ -183,6 +276,11 @@ const TaskDetail = () => {
         return 'bg-gray-500/10 text-gray-700 dark:text-gray-400'
     }
   }
+
+  // Check if both parties have completed
+  const bothCompleted = escrowInfo?.poster_completed && escrowInfo?.worker_completed
+  const waitingForOther = (isPoster && escrowInfo?.poster_completed && !escrowInfo?.worker_completed) ||
+    (!isPoster && isApplicationAccepted && escrowInfo?.worker_completed && !escrowInfo?.poster_completed)
 
   if (isLoading) {
     return (
@@ -203,8 +301,6 @@ const TaskDetail = () => {
     )
   }
 
-  const isCreator = user?.id === task.creator?.id
-
   return (
     <div className="space-y-6">
       {/* Back button */}
@@ -221,11 +317,25 @@ const TaskDetail = () => {
             <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
               <div className="flex-1">
                 <CardTitle className="text-2xl mb-2 text-foreground">{task.title}</CardTitle>
-                <span className={`text-xs px-3 py-1 rounded-full ${getStatusColor(task.status)}`}>
-                  {task.status.replace('_', ' ')}
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-xs px-3 py-1 rounded-full ${getStatusColor(task.status)}`}>
+                    {task.status.replace('_', ' ')}
+                  </span>
+                  {escrowInfo?.poster_completed && (
+                    <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Poster Confirmed
+                    </Badge>
+                  )}
+                  {escrowInfo?.worker_completed && (
+                    <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Worker Confirmed
+                    </Badge>
+                  )}
+                </div>
               </div>
-              {isCreator && (
+              {isPoster && task.status === 'open' && (
                 <div className="flex gap-2">
                   <Link to={`/tasks/${id}/edit`}>
                     <Button variant="outline" size="sm">
@@ -293,20 +403,64 @@ const TaskDetail = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Completion Progress Bar */}
+              {task.status === 'in_progress' && (
+                <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-foreground">Completion Status</span>
+                    <span className="text-sm text-muted-foreground">
+                      {escrowInfo?.poster_completed && escrowInfo?.worker_completed ? '100%' :
+                       (escrowInfo?.poster_completed || escrowInfo?.worker_completed) ? '50%' : '0%'}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(escrowInfo?.poster_completed ? 50 : 0) + (escrowInfo?.worker_completed ? 50 : 0)} 
+                    className="h-2" 
+                  />
+                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                    <span>Poster {escrowInfo?.poster_completed ? '✓' : 'Pending'}</span>
+                    <span>Worker {escrowInfo?.worker_completed ? '✓' : 'Pending'}</span>
+                  </div>
+                  {waitingForOther && (
+                    <p className="text-sm text-amber-600 mt-2 text-center">
+                      Waiting for {escrowInfo?.poster_completed ? 'worker' : 'poster'} to confirm completion...
+                    </p>
+                  )}
+                  {bothCompleted && (
+                    <p className="text-sm text-green-600 mt-2 text-center">
+                      Both parties have confirmed! Funds have been released to the worker(s).
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Applications section - only visible to creator */}
-          {isCreator && applications.length > 0 && (
+          {isPoster && task.status === 'open' && applications.length > 0 && (
             <Card className="border-border">
               <CardHeader>
                 <CardTitle className="text-foreground">Applications ({applications.length})</CardTitle>
+                <p className="text-sm text-muted-foreground">Select applicants to accept for this task</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 {applications.map((application: any) => (
                   <div key={application.id} className="border border-border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedApplicants.includes(application.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedApplicants([...selectedApplicants, application.id])
+                            } else {
+                              setSelectedApplicants(selectedApplicants.filter(id => id !== application.id))
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-border"
+                        />
                         <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center">
                           <User className="h-4 w-4 text-primary" />
                         </div>
@@ -321,42 +475,28 @@ const TaskDetail = () => {
                       </span>
                     </div>
                     <p className="text-muted-foreground text-sm mb-3">{application.message}</p>
-                    {application.status === 'pending' && (
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={() => acceptApplicationMutation.mutate(application.id)}
-                          disabled={acceptApplicationMutation.isPending}
-                        >
-                          Accept
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => rejectApplicationMutation.mutate(application.id)}
-                          disabled={rejectApplicationMutation.isPending}
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    )}
-                    {application.status === 'accepted' && (
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedApplication(application)
-                          setShowChatRoom(true)
-                        }}
-                        className="mt-2"
-                      >
-                        <MessageCircle className="h-3 w-3 mr-1" />
-                        Start Chat
-                      </Button>
-                    )}
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedApplication(application)
+                        setShowProfileModal(true)
+                      }}
+                    >
+                      <User className="h-3 w-3 mr-1" />
+                      View Profile
+                    </Button>
                   </div>
                 ))}
+                {selectedApplicants.length > 0 && (
+                  <Button 
+                    onClick={() => setIsAcceptDialogOpen(true)}
+                    className="w-full mt-4"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Accept Selected ({selectedApplicants.length})
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
@@ -398,7 +538,7 @@ const TaskDetail = () => {
           </Card>
 
           {/* Apply Button - For non-creators */}
-          {!isCreator && task.status === 'open' && !hasApplied && (
+          {!isPoster && task.status === 'open' && !hasApplied && (
             <Card className="border-border">
               <CardContent className="p-6">
                 <Dialog open={isApplyOpen} onOpenChange={setIsApplyOpen}>
@@ -443,7 +583,7 @@ const TaskDetail = () => {
           )}
 
           {/* Already Applied State */}
-          {!isCreator && hasApplied && !isApplicationAccepted && (
+          {!isPoster && hasApplied && !isApplicationAccepted && (
             <Card className="border-border bg-yellow-500/10">
               <CardContent className="p-6 text-center">
                 <Clock className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
@@ -456,13 +596,13 @@ const TaskDetail = () => {
           )}
 
           {/* Application Accepted State */}
-          {!isCreator && isApplicationAccepted && (
+          {!isPoster && isApplicationAccepted && task.status === 'in_progress' && (
             <Card className="border-border bg-green-500/10">
               <CardContent className="p-6 text-center">
                 <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
                 <h3 className="font-semibold text-foreground mb-1">Application Accepted!</h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Great news! Your application has been accepted.
+                  Great news! Your application has been accepted. You can now start working on this task.
                 </p>
                 <Button 
                   onClick={() => setShowChatRoom(true)}
@@ -471,49 +611,138 @@ const TaskDetail = () => {
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Open Chat
                 </Button>
-                <a
-                  href={`https://wa.me/?text=I'm interested in the task: ${task.title}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-3"
-                >
-                  Continue on WhatsApp
-                </a>
               </CardContent>
             </Card>
           )}
 
-          {/* Payment Proof Upload - Only show when task is in progress */}
-          {task.status === 'in_progress' && (
-            <PaymentProofUpload
-              taskId={parseInt(id!)}
-              taskTitle={task.title}
-              taskBudget={task.budget}
-              isPoster={isCreator}
-              isAcceptedApplicant={isApplicationAccepted}
-            />
+          {/* Completion Key Dialog - For both parties */}
+          {task.status === 'in_progress' && ((isPoster && !escrowInfo?.poster_completed) || (isApplicationAccepted && !escrowInfo?.worker_completed)) && (
+            <Card className="border-border">
+              <CardContent className="p-6">
+                <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full gap-2 bg-green-600 hover:bg-green-700">
+                      <Key className="h-4 w-4" />
+                      Mark Task as Complete
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-card border-border">
+                    <DialogHeader>
+                      <DialogTitle className="text-foreground">Complete Task</DialogTitle>
+                      <DialogDescription className="text-muted-foreground">
+                        Enter the completion key to mark this task as complete.
+                        {isPoster && escrowInfo?.completion_key && (
+                          <span className="block mt-2 text-sm text-amber-600">
+                            Your completion key: <span className="font-mono">{escrowInfo.completion_key}</span>
+                          </span>
+                        )}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <label className="text-sm font-medium text-foreground mb-2 block">Completion Key</label>
+                      <Input
+                        placeholder="Enter completion key"
+                        value={completionKey}
+                        onChange={(e) => setCompletionKey(e.target.value)}
+                        className="bg-background border-border text-foreground font-mono"
+                      />
+                      {!isPoster && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          The completion key will be provided by the task poster when the work is done.
+                        </p>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsCompleteDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleCompleteTask} 
+                        disabled={!completionKey.trim() || completeTaskMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        {completeTaskMutation.isPending ? 'Processing...' : 'Mark Complete'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardContent>
+            </Card>
           )}
 
-          {/* Escrow Manager */}
-          <EscrowManager
-            taskId={parseInt(id!)}
-            taskTitle={task.title}
-            taskBudget={task.budget}
-            taskStatus={task.status}
-            isPoster={isCreator}
-            isAcceptedApplicant={isApplicationAccepted}
-          />
+          {/* Already Completed by this user */}
+          {(isPoster && escrowInfo?.poster_completed) || (isApplicationAccepted && escrowInfo?.worker_completed) && (
+            <Card className="border-border bg-green-500/10">
+              <CardContent className="p-6 text-center">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                <h3 className="font-semibold text-foreground mb-1">Task Completed!</h3>
+                <p className="text-sm text-muted-foreground">
+                  You have marked this task as complete. 
+                  {waitingForOther ? ' Waiting for the other party to confirm.' : 
+                   bothCompleted ? ' Funds have been released to the worker(s)!' : ''}
+                </p>
+                {bothCompleted && (
+                  <div className="mt-3 p-3 bg-green-500/20 rounded-lg">
+                    <Wallet className="h-5 w-5 mx-auto mb-1 text-green-600" />
+                    <p className="text-sm font-medium text-green-700">Payment Released!</p>
+                    <p className="text-xs text-green-600">Funds have been sent to the worker's wallet.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Payment Proofs List */}
-          <PaymentProofList
-            taskId={parseInt(id!)}
-            taskTitle={task.title}
-            isPoster={isCreator}
-            isAcceptedApplicant={isApplicationAccepted}
-          />
+          {/* Escrow Info Card - For Poster Only */}
+          {isPoster && escrowInfo?.has_escrow && (
+            <Card className="border-border">
+              <CardHeader>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <Wallet className="h-4 w-4" />
+                  Escrow Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Amount in Escrow:</span>
+                  <span className="font-semibold text-primary">₦{parseFloat(escrowInfo.amount || '0').toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className={`font-medium ${
+                    escrowInfo.status === 'funded' ? 'text-green-600' :
+                    escrowInfo.status === 'released' ? 'text-blue-600' :
+                    'text-yellow-600'
+                  }`}>
+                    {escrowInfo.status?.toUpperCase()}
+                  </span>
+                </div>
+                {escrowInfo.funded_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Funded:</span>
+                    <span className="text-sm">{new Date(escrowInfo.funded_at).toLocaleDateString()}</span>
+                  </div>
+                )}
+                {escrowInfo.released_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Released:</span>
+                    <span className="text-sm">{new Date(escrowInfo.released_at).toLocaleDateString()}</span>
+                  </div>
+                )}
+                {escrowInfo.completion_key && (
+                  <div className="mt-2 p-2 bg-muted rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">Completion Key:</p>
+                    <code className="text-xs font-mono break-all">{escrowInfo.completion_key}</code>
+                    <p className="text-xs text-amber-600 mt-1">
+                      Share this key with the worker when the task is done to mark it as complete.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Task Status Messages */}
-          {task.status !== 'open' && !isCreator && !hasApplied && (
+          {task.status !== 'open' && !isPoster && !hasApplied && (
             <Card className="border-border bg-muted">
               <CardContent className="p-6 text-center">
                 {task.status === 'in_progress' ? (
@@ -547,12 +776,44 @@ const TaskDetail = () => {
         </div>
       </div>
 
+      {/* Accept Applications Dialog */}
+      <Dialog open={isAcceptDialogOpen} onOpenChange={setIsAcceptDialogOpen}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Accept Applications</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              You are about to accept {selectedApplicants.length} application(s). Once accepted:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+              <li>The task will be marked as "In Progress"</li>
+              <li>The selected applicants will be notified</li>
+              <li>Other applications will be automatically rejected</li>
+              <li>The escrow funds will be distributed equally among accepted workers upon completion</li>
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAcceptDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAcceptApplications} 
+              disabled={acceptApplicationsMutation.isPending}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {acceptApplicationsMutation.isPending ? 'Processing...' : 'Confirm Acceptance'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Poster Profile Modal */}
       <PosterProfileModal
         open={showProfileModal}
         onOpenChange={setShowProfileModal}
-        userId={task.creator?.id}
-        username={task.creator?.username}
+        userId={selectedApplication?.applicant || task.creator?.id}
+        username={selectedApplication?.applicant_username || task.creator?.username}
       />
 
       {/* Chat Room */}
@@ -560,8 +821,8 @@ const TaskDetail = () => {
         <ChatRoom
           taskId={parseInt(id!)}
           taskTitle={task.title}
-          otherUserId={isCreator ? (userApplication?.applicant || 0) : task.creator?.id}
-          otherUsername={isCreator ? (userApplication?.applicant_username || '') : task.creator?.username}
+          otherUserId={isPoster ? (userApplication?.applicant || 0) : task.creator?.id}
+          otherUsername={isPoster ? (userApplication?.applicant_username || '') : task.creator?.username}
           onClose={() => setShowChatRoom(false)}
         />
       )}
