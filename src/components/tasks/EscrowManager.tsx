@@ -31,7 +31,8 @@ interface EscrowManagerProps {
   isAcceptedApplicant: boolean
 }
 
-const EscrowManager = ({ taskId, taskBudget, taskStatus, isPoster, isAcceptedApplicant }: EscrowManagerProps) => {
+// Add underscore to unused parameter
+const EscrowManager = ({ taskId, taskBudget, taskStatus, isPoster, isAcceptedApplicant: _isAcceptedApplicant }: EscrowManagerProps) => {
   const [fundAmount, setFundAmount] = useState(taskBudget.toString())
   const [isFundDialogOpen, setIsFundDialogOpen] = useState(false)
   const [isReleaseDialogOpen, setIsReleaseDialogOpen] = useState(false)
@@ -47,6 +48,7 @@ const EscrowManager = ({ taskId, taskBudget, taskStatus, isPoster, isAcceptedApp
     enabled: !!taskId && isPoster, // Only fetch if user is poster
   })
 
+  // Rest of the component remains the same...
   const fundEscrowMutation = useMutation({
     mutationFn: (amount: number) => axiosInstance.post(`/tasks/${taskId}/fund_escrow/`, { amount }),
     onSuccess: () => {

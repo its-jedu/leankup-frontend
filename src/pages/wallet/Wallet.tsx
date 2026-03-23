@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import axiosInstance from '@/lib/axios'
-import { Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
+import { Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, Clock, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
 import { showToast } from '@/lib/toast'
 
 interface Transaction {

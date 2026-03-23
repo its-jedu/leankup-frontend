@@ -20,15 +20,7 @@ interface PosterProfileModalProps {
   username: string
 }
 
-interface UserStatsData {
-  totalTasks: number
-  completedTasks: number
-  totalCampaigns: number
-  successRate: number
-  responseRate: number
-  joinDate: string
-  recentTasks: any[]
-}
+// Remove the unused UserStatsData interface - it's not needed
 
 const PosterProfileModal = ({ open, onOpenChange, userId, username }: PosterProfileModalProps) => {
   // Fetch user stats

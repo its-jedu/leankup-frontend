@@ -4,6 +4,22 @@ import { useTheme } from '@/context/ThemeContext'
 import { Moon, Sun, Menu, Home } from 'lucide-react'
 import { useState } from 'react'
 
+interface NavItemLink {
+  name: string
+  path: string
+  isLink: true
+  icon?: typeof Home
+}
+
+interface NavItemAnchor {
+  name: string
+  href: string
+  isLink: false
+  icon?: never
+}
+
+type NavItem = NavItemLink | NavItemAnchor
+
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -13,7 +29,7 @@ const Navbar = () => {
   const isLandingPage = location.pathname === '/'
   
   // Navigation items configuration
-  const navItems = [
+  const navItems: NavItem[] = [
     { name: 'Home', path: '/', isLink: true, icon: Home },
     { name: 'Features', href: '#features', isLink: false },
     { name: 'How It Works', href: '#how-it-works', isLink: false },
@@ -57,7 +73,7 @@ const Navbar = () => {
                 <a
                   key={index}
                   href={item.href}
-                  onClick={(e) => handleNavClick(e, item.href!)}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className="text-gray-600 dark:text-gray-300 hover:text-[#032b5f] dark:hover:text-[#FBBF24] transition-colors"
                 >
                   {item.name}
@@ -140,7 +156,7 @@ const Navbar = () => {
                     href={item.href}
                     onClick={(e) => {
                       setIsMenuOpen(false)
-                      handleNavClick(e, item.href!)
+                      handleNavClick(e, item.href)
                     }}
                     className="text-gray-600 dark:text-gray-300 hover:text-[#032b5f] dark:hover:text-[#FBBF24] transition-colors px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                   >

@@ -32,6 +32,7 @@ import {
   Star,
   Key,
   Users,
+  User,
   Wallet,
   Copy,
   Check,

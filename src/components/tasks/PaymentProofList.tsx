@@ -28,13 +28,15 @@ interface PaymentProofListProps {
   isAcceptedApplicant: boolean
 }
 
-const PaymentProofList = ({ taskId, isPoster, isAcceptedApplicant }: PaymentProofListProps) => {
+// Add underscore to unused parameter
+const PaymentProofList = ({ taskId, isPoster, isAcceptedApplicant: _isAcceptedApplicant }: PaymentProofListProps) => {
   const [selectedProof, setSelectedProof] = useState<PaymentProof | null>(null)
   const [verifyNotes, setVerifyNotes] = useState('')
   const [isVerifyOpen, setIsVerifyOpen] = useState(false)
   const [verifyAction, setVerifyAction] = useState<'verify' | 'reject'>('verify')
   const queryClient = useQueryClient()
 
+  // Rest of the component remains the same...
   const { data: paymentProofs, isLoading } = useQuery({
     queryKey: ['task-payment-proofs', taskId],
     queryFn: async () => {

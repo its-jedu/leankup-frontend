@@ -60,7 +60,8 @@ const Settings = () => {
     fetchProfile()
   }, [])
 
-  const { register: registerProfile, handleSubmit: handleProfileSubmit, formState: { errors: profileErrors }, setValue: setProfileValue, getValues } = useForm<ProfileFormData>({
+  // Add underscore to unused error variables
+  const { register: registerProfile, handleSubmit: handleProfileSubmit, formState: { errors: _profileErrors }, setValue: setProfileValue, getValues } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       bio: '',
@@ -70,7 +71,8 @@ const Settings = () => {
     },
   })
 
-  const { register: registerBank, handleSubmit: handleBankSubmit, formState: { errors: bankErrors }, setValue: setBankValue } = useForm<BankFormData>({
+  // Add underscore to unused error variables
+  const { register: registerBank, handleSubmit: handleBankSubmit, formState: { errors: _bankErrors }, setValue: setBankValue } = useForm<BankFormData>({
     resolver: zodResolver(bankSchema),
     defaultValues: {
       bank_account_name: '',
