@@ -15,7 +15,7 @@ const testimonials = [
   {
     name: "Michael Chen",
     role: "Freelance Developer",
-    content: "I've completed over 30 local tasks through LeankUp, earning $8,500 in the process. The instant withdrawal feature is a game-changer - I get paid immediately after task completion. It's helped me build a steady income stream in my community.",
+    content: "I've completed over 30 local tasks through LeankUp, earning $3,500 in the process. The instant withdrawal feature is a game-changer. I get paid immediately after task completion. It's helped me build a steady income stream in my community.",
     rating: 5,
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
     location: "Seattle, WA",

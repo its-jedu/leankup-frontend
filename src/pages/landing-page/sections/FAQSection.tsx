@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     question: "What are the fees for using LeankUp?",
-    answer: "Posting tasks and creating campaigns is completely free. We only charge a small 5% fee on completed tasks and successful campaigns to cover platform costs and escrow protection. Withdrawals to bank accounts are free."
+    answer: "Posting tasks and creating campaigns is completely free. We will only charge a small 5% fee on completed tasks and successful campaigns after Phase 1 to cover platform costs and escrow protection. Withdrawals to bank accounts are free."
   },
   {
     question: "How does escrow protection work?",
@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     question: "How long does it take to receive funds?",
-    answer: "Task payments are released instantly upon completion confirmation. Campaign funds can be withdrawn immediately after reaching milestones or campaign end. Bank transfers typically take 1-2 business days."
+    answer: "Task payments are released instantly upon completion confirmation. Campaign funds can be withdrawn immediately after reaching milestones or campaign end."
   },
   {
     question: "Can I apply if I have no prior experience?",

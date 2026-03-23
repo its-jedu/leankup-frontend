@@ -12,7 +12,7 @@ const steps = [
   {
     number: "01",
     title: "Create Account",
-    description: "Sign up in less than 2 minutes with your email or social accounts",
+    description: "Sign up in less than 2 minutes with your email",
     icon: UserPlus,
     color: "from-[#032b5f] to-[#1e4a76]",
     image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
