@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } else if (error.response?.status === 400) {
         const errorData = error.response?.data;
-        const errorMessage = Object.values(errorData).flat()[0] || 'Invalid input';
+        const errorMessage: string = firstError || 'Invalid input';
         showToast.error('Validation Error', {
           description: errorMessage
         });

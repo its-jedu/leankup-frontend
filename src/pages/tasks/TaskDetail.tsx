@@ -211,7 +211,7 @@ const TaskDetail = () => {
 
   const handleGenerateKey = () => {
     setIsGeneratingKey(true)
-    generateKeyMutation.mutate()
+    generateKeyMutation.mutate({})
   }
 
   const applyMutation = useMutation({

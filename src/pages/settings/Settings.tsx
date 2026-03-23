@@ -160,7 +160,7 @@ const Settings = () => {
       return
     }
 
-    if (newPassword && newPassword.length < 6) {
+    if (newPassword && newPassword.toString().length < 6) {
       showToast.error('Password must be at least 6 characters')
       return
     }

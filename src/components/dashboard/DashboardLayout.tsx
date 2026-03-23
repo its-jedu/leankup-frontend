@@ -3,8 +3,8 @@ import DashboardNavbar from './DashboardNavbar'
 import DashboardSidebar from './DashboardSidebar'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+// import { Menu } from 'lucide-react'
+// import { Button } from '@/components/ui/button'
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)

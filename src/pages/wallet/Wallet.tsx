@@ -46,7 +46,7 @@ const WalletPage = () => {
   const queryClient = useQueryClient()
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [fundAmount, setFundAmount] = useState('')
-  const [withdrawMethod, setWithdrawMethod] = useState('bank')
+  const [withdrawMethod] = useState('bank')
   const [bankName, setBankName] = useState('')
   const [bankAccountNumber, setBankAccountNumber] = useState('')
   const [bankAccountName, setBankAccountName] = useState('')

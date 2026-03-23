@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Moon, Sun, Bell, CheckCheck, Menu, LogOut, Settings, Wallet, Briefcase, Target, Users } from 'lucide-react'
+import { Moon, Sun, Bell, CheckCheck, Menu, LogOut, Settings, Wallet } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,

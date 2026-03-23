@@ -34,6 +34,7 @@ export interface Campaign {
   end_date: string
   created_at: string
   updated_at: string
+  contributions?: any[]
 }
 
 export interface Application {
