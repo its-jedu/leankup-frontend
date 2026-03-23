@@ -3,7 +3,7 @@ import Footer from './layout/Footer'
 import HeroSection from './sections/HeroSection'
 import StorySection from './sections/StorySection'
 import FeaturesSection from './sections/FeaturesSection'
-import HowItWorksSection from './sections/HowItWorksSection'
+// import HowItWorksSection from './sections/HowItWorksSection'
 import ValuesSection from './sections/ValuesSection'
 import TestimonialsSection from './sections/TestimonialsSection'
 import FAQSection from './sections/FAQSection'
@@ -17,7 +17,7 @@ const LandingPage = () => {
         <HeroSection />
         <StorySection />
         <FeaturesSection />
-        <HowItWorksSection />
+        {/* <HowItWorksSection /> */}
         <ValuesSection />
         <TestimonialsSection />
         <FAQSection />
