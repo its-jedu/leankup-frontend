@@ -34,7 +34,10 @@ import {
   Star,
   Key,
   Users,
-  Wallet
+  Wallet,
+  Copy,
+  Check,
+  RefreshCw
 } from 'lucide-react'
 import { showToast } from '@/lib/toast'
 import PosterProfileModal from '@/components/poster/PosterProfileModal'
@@ -81,6 +84,10 @@ const TaskDetail = () => {
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false)
   const [selectedApplicants, setSelectedApplicants] = useState<number[]>([])
   const [isAcceptDialogOpen, setIsAcceptDialogOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [customKey, setCustomKey] = useState('')
+  const [isSetKeyDialogOpen, setIsSetKeyDialogOpen] = useState(false)
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false)
 
   // Fetch task details
   const { data: taskResponse, isLoading, refetch: refetchTask } = useQuery({
@@ -134,6 +141,79 @@ const TaskDetail = () => {
   const isApplicationAccepted = userApplication?.status === 'accepted'
   const isPoster = user?.id === task?.creator?.id
 
+  // Generate completion key mutation
+  const generateKeyMutation = useMutation({
+    mutationFn: async (length: number = 12) => {
+      const response = await axiosInstance.post('/tasks/generate_completion_key/', { length })
+      return response.data
+    },
+    onSuccess: (data) => {
+      setCustomKey(data.completion_key)
+      setIsGeneratingKey(false)
+      showToast.success('Key Generated!', {
+        description: 'Copy this key and share it with the worker when the task is done.'
+      })
+    },
+    onError: () => {
+      setIsGeneratingKey(false)
+      showToast.error('Generation Failed', {
+        description: 'Failed to generate completion key'
+      })
+    }
+  })
+
+  // Set completion key mutation
+  const setKeyMutation = useMutation({
+    mutationFn: async (key: string) => {
+      const response = await axiosInstance.patch(`/tasks/${id}/`, { completion_key: key })
+      return response.data
+    },
+    onSuccess: () => {
+      refetchTask()
+      refetchEscrow()
+      setIsSetKeyDialogOpen(false)
+      setCustomKey('')
+      showToast.success('Completion Key Set!', {
+        description: 'Your completion key has been set. Share it with the worker when the task is done.'
+      })
+    },
+    onError: (error: any) => {
+      showToast.error('Failed to Set Key', {
+        description: error.response?.data?.error || 'Please try a different key'
+      })
+    }
+  })
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    showToast.success('Copied!', {
+      description: 'Completion key copied to clipboard'
+    })
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleSetKey = () => {
+    if (!customKey.trim()) {
+      showToast.error('Key Required', {
+        description: 'Please enter a completion key or generate one.'
+      })
+      return
+    }
+    if (customKey.length < 3) {
+      showToast.error('Key Too Short', {
+        description: 'Completion key must be at least 3 characters.'
+      })
+      return
+    }
+    setKeyMutation.mutate(customKey)
+  }
+
+  const handleGenerateKey = () => {
+    setIsGeneratingKey(true)
+    generateKeyMutation.mutate()
+  }
+
   const applyMutation = useMutation({
     mutationFn: (data: { message: string }) =>
       axiosInstance.post(`/tasks/${id}/apply/`, data),
@@ -160,7 +240,7 @@ const TaskDetail = () => {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => axiosInstance.delete(`/tasks/${id}/delete_task/`),
+    mutationFn: () => axiosInstance.post(`/tasks/${id}/delete_task/`),
     onSuccess: () => {
       showToast.success('Task Deleted', {
         description: 'Task has been deleted successfully.'
@@ -255,7 +335,7 @@ const TaskDetail = () => {
   const handleCompleteTask = () => {
     if (!completionKey.trim()) {
       showToast.error('Completion Key Required', {
-        description: 'Please enter the completion key to mark this task as complete.'
+        description: 'Please enter the completion key provided by the task poster.'
       })
       return
     }
@@ -615,7 +695,7 @@ const TaskDetail = () => {
             </Card>
           )}
 
-          {/* Completion Key Dialog - For both parties */}
+          {/* Complete Task Dialog - For both parties */}
           {task.status === 'in_progress' && ((isPoster && !escrowInfo?.poster_completed) || (isApplicationAccepted && !escrowInfo?.worker_completed)) && (
             <Card className="border-border">
               <CardContent className="p-6">
@@ -630,11 +710,10 @@ const TaskDetail = () => {
                     <DialogHeader>
                       <DialogTitle className="text-foreground">Complete Task</DialogTitle>
                       <DialogDescription className="text-muted-foreground">
-                        Enter the completion key to mark this task as complete.
-                        {isPoster && escrowInfo?.completion_key && (
-                          <span className="block mt-2 text-sm text-amber-600">
-                            Your completion key: <span className="font-mono">{escrowInfo.completion_key}</span>
-                          </span>
+                        {isPoster ? (
+                          "Enter the completion key to mark this task as complete. This confirms you're satisfied with the work."
+                        ) : (
+                          "Enter the completion key provided by the task poster to mark this task as complete."
                         )}
                       </DialogDescription>
                     </DialogHeader>
@@ -646,9 +725,15 @@ const TaskDetail = () => {
                         onChange={(e) => setCompletionKey(e.target.value)}
                         className="bg-background border-border text-foreground font-mono"
                       />
+                      {!isPoster && escrowInfo?.completion_key && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Hint: The completion key is "{escrowInfo.completion_key}"
+                        </p>
+                      )}
                       {!isPoster && (
                         <p className="text-xs text-muted-foreground mt-2">
                           The completion key will be provided by the task poster when the work is done.
+                          You can also discuss the key in the chat.
                         </p>
                       )}
                     </div>
@@ -698,10 +783,10 @@ const TaskDetail = () => {
               <CardHeader>
                 <CardTitle className="text-foreground flex items-center gap-2">
                   <Wallet className="h-4 w-4" />
-                  Escrow Details
+                  Escrow Management
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount in Escrow:</span>
                   <span className="font-semibold text-primary">₦{parseFloat(escrowInfo.amount || '0').toLocaleString()}</span>
@@ -728,12 +813,48 @@ const TaskDetail = () => {
                     <span className="text-sm">{new Date(escrowInfo.released_at).toLocaleDateString()}</span>
                   </div>
                 )}
-                {escrowInfo.completion_key && (
-                  <div className="mt-2 p-2 bg-muted rounded-lg">
-                    <p className="text-xs text-muted-foreground mb-1">Completion Key:</p>
-                    <code className="text-xs font-mono break-all">{escrowInfo.completion_key}</code>
-                    <p className="text-xs text-amber-600 mt-1">
-                      Share this key with the worker when the task is done to mark it as complete.
+                
+                {/* Completion Key Section */}
+                {!escrowInfo.completion_key ? (
+                  <div className="mt-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Key className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-700">No Completion Key Set</span>
+                    </div>
+                    <p className="text-xs text-yellow-600 mb-2">
+                      You need to set a completion key. The worker will use this key to mark the task as complete.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsSetKeyDialogOpen(true)}
+                      className="w-full"
+                    >
+                      <Key className="h-3 w-3 mr-1" />
+                      Set Completion Key
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Key className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-700">Completion Key</span>
+                    </div>
+                    <code className="text-sm font-mono bg-green-500/20 px-2 py-1 rounded block text-center break-all">
+                      {escrowInfo.completion_key}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(escrowInfo.completion_key!)}
+                      className="mt-2 w-full"
+                    >
+                      {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                      {copied ? 'Copied!' : 'Copy Key'}
+                    </Button>
+                    <p className="text-xs text-green-600 mt-2 text-center">
+                      Share this key with the worker when the task is done. They will use it to mark the task as complete.
                     </p>
                   </div>
                 )}
@@ -775,6 +896,59 @@ const TaskDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Set Completion Key Dialog */}
+      <Dialog open={isSetKeyDialogOpen} onOpenChange={setIsSetKeyDialogOpen}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Set Completion Key</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Set a completion key that the worker will use to mark this task as complete.
+              You can either enter a custom key or generate a random one.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Custom Key</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter your own key (e.g., done123)"
+                  value={customKey}
+                  onChange={(e) => setCustomKey(e.target.value)}
+                  className="bg-background border-border text-foreground flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleGenerateKey}
+                  disabled={isGeneratingKey}
+                  title="Generate random key"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isGeneratingKey ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+              {customKey && (
+                <p className="text-xs text-muted-foreground">
+                  Key must be at least 3 characters and can contain letters, numbers, underscores, and hyphens.
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSetKeyDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSetKey} 
+              disabled={!customKey.trim() || setKeyMutation.isPending}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {setKeyMutation.isPending ? 'Setting...' : 'Set Key'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Accept Applications Dialog */}
       <Dialog open={isAcceptDialogOpen} onOpenChange={setIsAcceptDialogOpen}>
