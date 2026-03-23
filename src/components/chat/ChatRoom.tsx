@@ -36,7 +36,7 @@ const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: Ch
   const { data: otherUserProfile } = useQuery({
     queryKey: ['user-profile', otherUserId],
     queryFn: async () => {
-      const response = await axiosInstance.get(`/users/${otherUserId}/profile/`)
+      const response = await axiosInstance.get(`/users/profile/${otherUserId}/`)
       return response.data
     },
     enabled: !!otherUserId,
@@ -48,8 +48,8 @@ const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: Ch
     }
   }, [otherUserProfile])
 
-  // Fetch messages
-  const { data: messages, isLoading } = useQuery({
+  // Fetch messages - using the correct endpoint
+  const { data: messages, isLoading, refetch } = useQuery({
     queryKey: ['chat-messages', taskId],
     queryFn: async () => {
       const response = await axiosInstance.get(`/tasks/${taskId}/messages/`)
@@ -65,8 +65,10 @@ const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: Ch
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chat-messages', taskId] })
       setNewMessage('')
+      refetch()
     },
     onError: (error: any) => {
+      console.error('Send message error:', error)
       showToast.error('Failed to send message', {
         description: error.response?.data?.error || 'Please try again'
       })
