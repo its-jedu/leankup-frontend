@@ -12,13 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import axiosInstance from '@/lib/axios'
 import { Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
@@ -198,19 +191,6 @@ const WalletPage = () => {
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />
-      default:
-        return null
-    }
-  }
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -277,7 +257,7 @@ const WalletPage = () => {
         </Button>
       </div>
 
-      {/* Balance Card - Updated with better visibility in both modes */}
+      {/* Balance Card */}
       <Card className="bg-gradient-to-r from-blue-600 to-blue-500 dark:from-secondary/90 dark:to-secondary/70 border-0 shadow-xl">
         <CardContent className="p-6 md:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -436,7 +416,7 @@ const WalletPage = () => {
             </div>
           </div>
 
-          {/* Stats Grid - Updated with better contrast */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-3 md:gap-4">
             <div className="bg-white/20 dark:bg-background/20 rounded-lg p-3 md:p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-1">

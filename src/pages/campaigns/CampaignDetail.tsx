@@ -20,12 +20,10 @@ import { Campaign } from '../../types'
 import { 
   Target, 
   Calendar, 
-  User, 
   ArrowLeft,
   Edit,
   Trash2,
   DollarSign,
-  Users,
   Clock
 } from 'lucide-react'
 
@@ -203,11 +201,11 @@ const CampaignDetail = () => {
                     <div key={contribution.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-primary">{contribution.contributor.username[0]?.toUpperCase()}</span>
                         </div>
                         <span className="font-medium">{contribution.contributor.username}</span>
                       </div>
-                      <span className="font-semibold text-primary">${contribution.amount}</span>
+                      <span className="font-semibold text-primary">₦{contribution.amount.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -222,9 +220,9 @@ const CampaignDetail = () => {
             <CardContent className="p-6">
               <div className="text-center mb-6">
                 <h3 className="text-3xl font-bold text-primary">
-                  ${campaign.data.raised_amount.toLocaleString()}
+                  ₦{campaign.data.raised_amount.toLocaleString()}
                 </h3>
-                <p className="text-gray-500">raised of ${campaign.data.target_amount.toLocaleString()}</p>
+                <p className="text-gray-500">raised of ₦{campaign.data.target_amount.toLocaleString()}</p>
               </div>
 
               <Progress value={progress} className="h-3 mb-4" />
@@ -298,7 +296,7 @@ const CampaignDetail = () => {
             <CardContent>
               <div className="flex items-center gap-3">
                 <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary" />
+                  <span className="font-semibold text-primary text-lg">{campaign.data.creator.username[0]?.toUpperCase()}</span>
                 </div>
                 <div>
                   <p className="font-semibold">{campaign.data.creator.username}</p>

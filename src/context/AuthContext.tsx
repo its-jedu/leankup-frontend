@@ -76,7 +76,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } else if (error.response?.status === 400) {
         const errorData = error.response?.data;
-        const errorMessage: string = firstError || 'Invalid input';
+        const firstErrorMessage = errorData ? Object.values(errorData).flat()[0] : null;
+        const errorMessage: string = firstErrorMessage ? String(firstErrorMessage) : 'Invalid input';
         showToast.error('Validation Error', {
           description: errorMessage
         });
@@ -129,7 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           errorMessage = `Last Name: ${errorData.last_name[0]}`;
         } else if (typeof errorData === 'object') {
           const firstError = Object.values(errorData).flat()[0];
-          errorMessage = firstError || 'Invalid input';
+          errorMessage = firstError ? String(firstError) : 'Invalid input';
         }
         
         showToast.error('Registration Failed', {

@@ -16,12 +16,10 @@ import { Textarea } from '../../components/ui/textarea'
 import { Input } from '../../components/ui/input'
 import { useAuth } from '../../hooks/useAuth'
 import axiosInstance from '../../lib/axios'
-import { Task } from '../../types'
 import { 
   MapPin, 
   DollarSign, 
   Calendar, 
-  User, 
   Clock, 
   CheckCircle, 
   XCircle,
@@ -211,7 +209,7 @@ const TaskDetail = () => {
 
   const handleGenerateKey = () => {
     setIsGeneratingKey(true)
-    generateKeyMutation.mutate({})
+    generateKeyMutation.mutate(12)
   }
 
   const applyMutation = useMutation({
@@ -542,7 +540,7 @@ const TaskDetail = () => {
                           className="w-4 h-4 rounded border-border"
                         />
                         <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-primary" />
+                          <span className="text-xs font-medium text-primary">{application.applicant_username[0]?.toUpperCase()}</span>
                         </div>
                         <span className="font-medium text-foreground">{application.applicant_username}</span>
                       </div>
@@ -591,7 +589,7 @@ const TaskDetail = () => {
             <CardContent>
               <div className="flex items-center gap-3 mb-4">
                 <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary" />
+                  <span className="font-semibold text-primary text-lg">{task.creator?.username[0]?.toUpperCase()}</span>
                 </div>
                 <div>
                   <p className="font-semibold text-foreground">{task.creator?.username}</p>
@@ -996,7 +994,6 @@ const TaskDetail = () => {
           taskId={parseInt(id!)}
           taskTitle={task.title}
           otherUserId={isPoster ? (userApplication?.applicant || 0) : task.creator?.id}
-          otherUsername={isPoster ? (userApplication?.applicant_username || '') : task.creator?.username}
           onClose={() => setShowChatRoom(false)}
         />
       )}

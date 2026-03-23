@@ -17,7 +17,7 @@ interface PaymentProofUploadProps {
   isAcceptedApplicant: boolean
 }
 
-const PaymentProofUpload = ({ taskId, _taskTitle, taskBudget, isPoster, _isAcceptedApplicant }: PaymentProofUploadProps) => {
+const PaymentProofUpload = ({ taskId, taskBudget, isPoster, isAcceptedApplicant }: PaymentProofUploadProps) => {
   const [open, setOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)

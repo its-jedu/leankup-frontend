@@ -15,7 +15,7 @@ import {
 import axiosInstance from '@/lib/axios'
 import { useAuth } from '@/hooks/useAuth'
 import { Campaign } from '@/types'
-import { Search, Target, Calendar, Users, Plus, Filter } from 'lucide-react'
+import { Search, Target, Calendar, Filter } from 'lucide-react'
 
 const Campaigns = () => {
   const { user } = useAuth()
@@ -178,7 +178,7 @@ const Campaigns = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center">
-                          <Users className="h-4 w-4 text-primary" />
+                          <span className="text-xs font-medium text-primary">{campaign.creator?.username[0]?.toUpperCase()}</span>
                         </div>
                         <span className="text-sm text-muted-foreground">{campaign.creator?.username}</span>
                       </div>

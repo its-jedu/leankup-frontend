@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/context/ThemeContext'
-import { Moon, Sun, Menu } from 'lucide-react'
+import { Moon, Sun, Menu, Home } from 'lucide-react'
 import { useState } from 'react'
 
 const Navbar = () => {
@@ -14,7 +14,7 @@ const Navbar = () => {
   
   // Navigation items configuration
   const navItems = [
-    { name: 'Home', path: '/', isLink: true },
+    { name: 'Home', path: '/', isLink: true, icon: Home },
     { name: 'Features', href: '#features', isLink: false },
     { name: 'How It Works', href: '#how-it-works', isLink: false },
     { name: 'Testimonials', href: '#testimonials', isLink: false },
@@ -41,7 +41,6 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             {navItems.map((item, index) => {
-              const Icon = item.icon
               if (item.isLink) {
                 return (
                   <Link
@@ -49,7 +48,7 @@ const Navbar = () => {
                     to={item.path}
                     className="flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:text-[#032b5f] dark:hover:text-[#FBBF24] transition-colors"
                   >
-                    {Icon && <Home className="h-4 w-4" />}
+                    {item.icon && <Home className="h-4 w-4" />}
                     <span>{item.name}</span>
                   </Link>
                 )
@@ -122,7 +121,6 @@ const Navbar = () => {
           <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700 animate-slide-down">
             <div className="flex flex-col gap-3">
               {navItems.map((item, index) => {
-                const Icon = item.icon
                 if (item.isLink) {
                   return (
                     <Link
@@ -131,7 +129,7 @@ const Navbar = () => {
                       onClick={() => setIsMenuOpen(false)}
                       className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-[#032b5f] dark:hover:text-[#FBBF24] transition-colors px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
-                      {Icon && <Home className="h-4 w-4" />}
+                      {item.icon && <Home className="h-4 w-4" />}
                       <span>{item.name}</span>
                     </Link>
                   )

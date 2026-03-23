@@ -24,7 +24,7 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog'
 import axiosInstance from '../../lib/axios'
-import { ArrowLeft, AlertCircle, Wallet, CheckCircle } from 'lucide-react'
+import { ArrowLeft, AlertCircle, Wallet } from 'lucide-react'
 import { showToast } from '@/lib/toast'
 
 const taskSchema = z.object({

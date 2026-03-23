@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Dialog,
@@ -10,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { User, Calendar, Briefcase, Star, CheckCircle, Clock, MessageCircle, ExternalLink } from 'lucide-react'
+import { Calendar, Briefcase, Star, CheckCircle, Clock } from 'lucide-react'
 import axiosInstance from '@/lib/axios'
 import { Link } from 'react-router-dom'
 
@@ -21,7 +20,7 @@ interface PosterProfileModalProps {
   username: string
 }
 
-interface UserStats {
+interface UserStatsData {
   totalTasks: number
   completedTasks: number
   totalCampaigns: number
@@ -32,8 +31,6 @@ interface UserStats {
 }
 
 const PosterProfileModal = ({ open, onOpenChange, userId, username }: PosterProfileModalProps) => {
-  const [activeTab, setActiveTab] = useState<'tasks' | 'campaigns'>('tasks')
-
   // Fetch user stats
   const { data: userStats, isLoading } = useQuery({
     queryKey: ['user-stats', userId],

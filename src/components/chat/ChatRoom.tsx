@@ -21,11 +21,11 @@ interface ChatRoomProps {
   taskId: number
   taskTitle: string
   otherUserId: number
-  otherUsername: string
+  otherUsername?: string
   onClose: () => void
 }
 
-const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: ChatRoomProps) => {
+const ChatRoom = ({ taskId, taskTitle, otherUserId, onClose }: ChatRoomProps) => {
   const { user } = useAuth()
   const [newMessage, setNewMessage] = useState('')
   const [whatsappNumber, setWhatsappNumber] = useState<string | null>(null)
@@ -91,12 +91,12 @@ const ChatRoom = ({ taskId, taskTitle, otherUserId, otherUsername, onClose }: Ch
   }
 
   // WhatsApp link
-  const getWhatsAppLink = () => {
+  const getWhatsAppLink = (): string | undefined => {
     if (whatsappNumber) {
       const cleanNumber = whatsappNumber.replace(/\D/g, '')
       return `https://wa.me/${cleanNumber}?text=Hi! I'm interested in discussing the task: ${taskTitle}`
     }
-    return null
+    return undefined
   }
 
   return (

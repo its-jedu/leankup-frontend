@@ -28,7 +28,7 @@ interface PaymentProofListProps {
   isAcceptedApplicant: boolean
 }
 
-const PaymentProofList = ({ taskId, _taskTitle, isPoster, _isAcceptedApplicant }: PaymentProofListProps) => {
+const PaymentProofList = ({ taskId, isPoster, isAcceptedApplicant }: PaymentProofListProps) => {
   const [selectedProof, setSelectedProof] = useState<PaymentProof | null>(null)
   const [verifyNotes, setVerifyNotes] = useState('')
   const [isVerifyOpen, setIsVerifyOpen] = useState(false)
@@ -196,7 +196,7 @@ const PaymentProofList = ({ taskId, _taskTitle, isPoster, _isAcceptedApplicant }
               </div>
             </div>
 
-            {/* Verification actions - only visible to receiver */}
+            {/* Verification actions - only visible to poster */}
             {proof.status === 'pending' && isPoster && (
               <div className="mt-3 flex gap-2 justify-end">
                 <Button

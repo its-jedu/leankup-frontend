@@ -10,13 +10,11 @@ import {
   DollarSign, 
   Clock, 
   Search,
-  SlidersHorizontal,
   Calendar,
   Users,
   ArrowRight,
   X,
-  Filter,
-  Sparkles
+  Filter
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Task, Campaign } from '@/types'

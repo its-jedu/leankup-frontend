@@ -31,7 +31,7 @@ interface EscrowManagerProps {
   isAcceptedApplicant: boolean
 }
 
-const EscrowManager = ({ taskId, _taskTitle, taskBudget, taskStatus, isPoster, _isAcceptedApplicant }: EscrowManagerProps) => {
+const EscrowManager = ({ taskId, taskBudget, taskStatus, isPoster, isAcceptedApplicant }: EscrowManagerProps) => {
   const [fundAmount, setFundAmount] = useState(taskBudget.toString())
   const [isFundDialogOpen, setIsFundDialogOpen] = useState(false)
   const [isReleaseDialogOpen, setIsReleaseDialogOpen] = useState(false)
