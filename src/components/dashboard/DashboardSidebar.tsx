@@ -58,7 +58,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
         className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300",
           isActive 
-            ? "bg-gradient-to-r from-primary to-accent text-white shadow-lg shadow-primary/20" 
+            ? "bg-gradient-to-r from-primary to-primary-light text-white shadow-lg shadow-primary/20" 
             : "text-muted-foreground hover:bg-muted hover:text-foreground"
         )}
       >
@@ -74,7 +74,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
             <TooltipTrigger asChild>
               {linkContent}
             </TooltipTrigger>
-            <TooltipContent side="right" className="bg-popover text-popover-foreground">
+            <TooltipContent side="right" className="bg-popover text-popover-foreground border-border">
               {item.name}
             </TooltipContent>
           </Tooltip>
@@ -94,13 +94,13 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
       )}>
         {(!isCollapsed || isMobile) && (
           <Link to="/dashboard" className="flex items-center">
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            {/* <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
               LeankUp
-            </span>
+            </span> */}
           </Link>
         )}
         {isMobile ? (
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-muted">
             <X className="h-5 w-5" />
           </Button>
         ) : (
@@ -138,7 +138,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300",
                 isActive 
-                  ? "bg-gradient-to-r from-primary to-accent text-white" 
+                  ? "bg-gradient-to-r from-primary to-primary-light text-white" 
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
@@ -154,7 +154,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
                   <TooltipTrigger asChild>
                     {linkContent}
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-popover text-popover-foreground">
+                  <TooltipContent side="right" className="bg-popover text-popover-foreground border-border">
                     {item.name}
                   </TooltipContent>
                 </Tooltip>
@@ -171,7 +171,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-xl",
+                "w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl",
                 isCollapsed && !isMobile && "justify-center px-2"
               )}
               onClick={logout}
@@ -188,7 +188,7 @@ const DashboardSidebar = ({ isCollapsed, onToggle, isMobile, onClose }: Dashboar
                   <TooltipTrigger asChild>
                     {logoutButton}
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-popover text-popover-foreground">
+                  <TooltipContent side="right" className="bg-popover text-popover-foreground border-border">
                     Logout
                   </TooltipContent>
                 </Tooltip>

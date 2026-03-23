@@ -10,17 +10,17 @@ import {
   DollarSign, 
   Clock, 
   Search,
-  Filter,
+  SlidersHorizontal,
   Calendar,
   Users,
   ArrowRight,
-  Sparkles,
-  SlidersHorizontal,
-  X
+  X,
+  Filter,
+  Sparkles
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Task, Campaign } from '@/types'
-import { formatDistanceToNow, format, subHours, subDays, isToday, isThisWeek } from 'date-fns'
+import { formatDistanceToNow, subHours, subDays, isToday, isThisWeek } from 'date-fns'
 import axiosInstance from '@/lib/axios'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -69,7 +69,6 @@ const Dashboard = () => {
       let tasks = response.data?.results || response.data || []
       tasks = Array.isArray(tasks) ? tasks.filter((t: Task) => t.status === 'open') : []
       
-      // Apply time filter
       if (filters.timeFilter !== 'all') {
         tasks = tasks.filter((task: Task) => {
           const createdDate = new Date(task.created_at)
@@ -110,7 +109,6 @@ const Dashboard = () => {
       let campaigns = response.data?.results || response.data || []
       campaigns = Array.isArray(campaigns) ? campaigns : []
       
-      // Apply time filter
       if (filters.timeFilter !== 'all') {
         campaigns = campaigns.filter((campaign: Campaign) => {
           const createdDate = new Date(campaign.created_at)
@@ -165,10 +163,10 @@ const Dashboard = () => {
     const now = new Date()
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / 60000)
     
-    if (diffMinutes < 1) return { text: 'Just now', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }
-    if (diffMinutes < 60) return { text: `${diffMinutes} min ago`, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }
-    if (diffMinutes < 1440) return { text: `${Math.floor(diffMinutes / 60)} hours ago`, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' }
-    return { text: formatDistanceToNow(date, { addSuffix: true }), color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' }
+    if (diffMinutes < 1) return { text: 'Just now', variant: 'success' }
+    if (diffMinutes < 60) return { text: `${diffMinutes} min ago`, variant: 'info' }
+    if (diffMinutes < 1440) return { text: `${Math.floor(diffMinutes / 60)} hours ago`, variant: 'warning' }
+    return { text: formatDistanceToNow(date, { addSuffix: true }), variant: 'default' }
   }
 
   const resetFilters = () => {
@@ -185,46 +183,66 @@ const Dashboard = () => {
 
   const hasActiveFilters = filters.category !== 'all' || filters.location || filters.minBudget || filters.maxBudget || filters.timeFilter !== 'all'
 
+  const getBadgeClass = (variant: string) => {
+    switch (variant) {
+      case 'success':
+        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800'
+      case 'info':
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+      case 'warning':
+        return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800'
+      default:
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary/80 dark:from-primary dark:to-primary/70 p-8">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              Find Opportunities in Your Community
-            </h1>
-            <p className="text-white/80 text-sm md:text-base">
-              Discover local tasks to earn money or support meaningful campaigns
-            </p>
+    <div className="space-y-6 pb-8">
+      {/* Hero Section - Solid Blue Background Card */}
+      <Card className="relative overflow-hidden border-none bg-blue-600 dark:from-secondary/30 dark:via-secondary/10 dark:to-background shadow-xl dark:bg-gradient-to-br">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        
+        {/* Glow Elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl opacity-10"></div>
+        
+        <CardContent className="relative p-6 md:p-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-3">
+                Find Opportunities in <span className="text-white">Your Community</span>
+              </h1>
+              <p className="text-white/80 text-sm md:text-base max-w-2xl">
+                Discover local tasks to earn money or support meaningful campaigns that make a difference
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <Link to="/tasks/create" className="w-full sm:w-auto">
+                <Button className="w-full bg-white text-blue-600 hover:bg-white/90 shadow-lg font-semibold">
+                  <Briefcase className="mr-2 h-4 w-4" />
+                  Post a Task
+                </Button>
+              </Link>
+              <Link to="/campaigns/create" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full border-white/30 text-white hover:bg-white/10 hover:text-white">
+                  <Target className="mr-2 h-4 w-4" />
+                  Start Campaign
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <Link to="/tasks/create">
-              <Button className="bg-white text-primary hover:bg-white/90 shadow-lg">
-                <Briefcase className="mr-2 h-4 w-4" />
-                Post a Task
-              </Button>
-            </Link>
-            <Link to="/campaigns/create">
-              <Button variant="outline" className="border-white text-white hover:bg-white/10">
-                <Target className="mr-2 h-4 w-4" />
-                Start Campaign
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Search and Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tasks or campaigns..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 bg-background border-border"
+            className="pl-10 h-11 bg-background border-border focus:ring-primary dark:focus:ring-secondary"
           />
         </div>
         <Button 
@@ -232,10 +250,10 @@ const Dashboard = () => {
           onClick={() => setShowFilters(!showFilters)}
           className="gap-2 h-11"
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <Filter className="h-4 w-4" />
           Filters
           {hasActiveFilters && (
-            <Badge variant="secondary" className="ml-1 rounded-full px-1.5 h-5 bg-primary/20">
+            <Badge variant="secondary" className="ml-1 rounded-full px-1.5 h-5 bg-primary/20 text-primary dark:bg-secondary/20 dark:text-secondary">
               •
             </Badge>
           )}
@@ -251,13 +269,13 @@ const Dashboard = () => {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <Card className="border-border bg-card">
+            <Card className="border-border bg-card shadow-lg">
               <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Category</label>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Category</label>
                     <Select value={filters.category} onValueChange={(v) => setFilters({...filters, category: v})}>
-                      <SelectTrigger className="bg-background">
+                      <SelectTrigger className="bg-background border-border">
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
                       <SelectContent>
@@ -269,19 +287,19 @@ const Dashboard = () => {
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Location</label>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Location</label>
                     <Input
                       placeholder="Enter location..."
                       value={filters.location}
                       onChange={(e) => setFilters({...filters, location: e.target.value})}
-                      className="bg-background"
+                      className="bg-background border-border"
                     />
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Time Posted</label>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Time Posted</label>
                     <Select value={filters.timeFilter} onValueChange={(v) => setFilters({...filters, timeFilter: v})}>
-                      <SelectTrigger className="bg-background">
+                      <SelectTrigger className="bg-background border-border">
                         <SelectValue placeholder="All Time" />
                       </SelectTrigger>
                       <SelectContent>
@@ -294,23 +312,23 @@ const Dashboard = () => {
                   
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Min Budget</label>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Min Budget</label>
                       <Input
                         type="number"
                         placeholder="Min"
                         value={filters.minBudget}
                         onChange={(e) => setFilters({...filters, minBudget: e.target.value})}
-                        className="bg-background"
+                        className="bg-background border-border"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Max Budget</label>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Max Budget</label>
                       <Input
                         type="number"
                         placeholder="Max"
                         value={filters.maxBudget}
                         onChange={(e) => setFilters({...filters, maxBudget: e.target.value})}
-                        className="bg-background"
+                        className="bg-background border-border"
                       />
                     </div>
                   </div>
@@ -334,19 +352,16 @@ const Dashboard = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Briefcase className="h-5 w-5 text-primary" />
-              </div>
               <h2 className="text-lg font-semibold text-foreground">Available Tasks</h2>
             </div>
-            <Link to="/tasks" className="text-sm text-primary hover:underline">
+            <Link to="/tasks" className="text-sm text-primary dark:text-secondary hover:underline">
               View All
             </Link>
           </div>
 
           {tasksLoading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary dark:border-secondary"></div>
             </div>
           ) : tasks.length > 0 ? (
             <div className="space-y-3">
@@ -359,24 +374,24 @@ const Dashboard = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      whileHover={{ x: 4 }}
+                      whileHover={{ y: -2 }}
                     >
                       <Link to={`/tasks/${task.id}`}>
-                        <Card className="hover:shadow-lg transition-all duration-300 border-border cursor-pointer bg-card">
+                        <Card className="hover:shadow-xl transition-all duration-300 border-border cursor-pointer bg-card group">
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                                  <Badge variant="secondary" className="bg-primary/10 text-primary dark:bg-secondary/10 dark:text-secondary text-xs border-primary/20 dark:border-secondary/20">
                                     {task.category}
                                   </Badge>
-                                  <Badge className={`text-xs ${timeBadge.color}`}>
-                                    <Clock className="mr-1 h-3 w-3" />
+                                  <Badge className={`text-xs border ${getBadgeClass(timeBadge.variant)}`}>
+                                    <Clock className="mr-1 h-3 w-3 inline" />
                                     {timeBadge.text}
                                   </Badge>
                                   {task.budget && (
                                     <Badge variant="outline" className="border-green-200 text-green-600 dark:border-green-800 dark:text-green-400 text-xs">
-                                      <DollarSign className="mr-1 h-3 w-3" />
+                                      <DollarSign className="mr-1 h-3 w-3 inline" />
                                       ₦{task.budget.toLocaleString()}
                                     </Badge>
                                   )}
@@ -387,18 +402,22 @@ const Dashboard = () => {
                                 <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                   {task.description}
                                 </p>
-                                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                   <div className="flex items-center gap-1">
                                     <MapPin className="h-3 w-3" />
-                                    {task.location}
+                                    <span>{task.location}</span>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <Users className="h-3 w-3" />
-                                    {task.applications?.length || 0} applicants
+                                    <span>{task.applications?.length || 0} applicants</span>
                                   </div>
                                 </div>
                               </div>
-                              <Button size="sm" variant="outline" className="shrink-0 gap-1 text-xs">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="shrink-0 gap-1 text-xs group-hover:bg-primary group-hover:text-white group-hover:border-primary dark:group-hover:bg-secondary dark:group-hover:text-background dark:group-hover:border-secondary transition-all"
+                              >
                                 Apply
                                 <ArrowRight className="h-3 w-3" />
                               </Button>
@@ -413,9 +432,10 @@ const Dashboard = () => {
             </div>
           ) : (
             <Card className="border-border bg-card">
-              <CardContent className="py-8 text-center">
-                <Briefcase className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+              <CardContent className="py-12 text-center">
+                <Briefcase className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">No tasks found</p>
+                <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters</p>
               </CardContent>
             </Card>
           )}
@@ -425,19 +445,16 @@ const Dashboard = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Target className="h-5 w-5 text-primary" />
-              </div>
               <h2 className="text-lg font-semibold text-foreground">Active Campaigns</h2>
             </div>
-            <Link to="/campaigns" className="text-sm text-primary hover:underline">
+            <Link to="/campaigns" className="text-sm text-primary dark:text-secondary hover:underline">
               View All
             </Link>
           </div>
 
           {campaignsLoading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary dark:border-secondary"></div>
             </div>
           ) : campaigns.length > 0 ? (
             <div className="space-y-3">
@@ -455,19 +472,19 @@ const Dashboard = () => {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      whileHover={{ x: 4 }}
+                      whileHover={{ y: -2 }}
                     >
                       <Link to={`/campaigns/${campaign.id}`}>
-                        <Card className="hover:shadow-lg transition-all duration-300 border-border cursor-pointer bg-card">
+                        <Card className="hover:shadow-xl transition-all duration-300 border-border cursor-pointer bg-card group">
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                                  <Badge variant="secondary" className="bg-primary/10 text-primary dark:bg-secondary/10 dark:text-secondary text-xs border-primary/20 dark:border-secondary/20">
                                     {campaign.category}
                                   </Badge>
-                                  <Badge className={`text-xs ${timeBadge.color}`}>
-                                    <Clock className="mr-1 h-3 w-3" />
+                                  <Badge className={`text-xs border ${getBadgeClass(timeBadge.variant)}`}>
+                                    <Clock className="mr-1 h-3 w-3 inline" />
                                     {timeBadge.text}
                                   </Badge>
                                   <Badge variant="outline" className="border-orange-200 text-orange-600 dark:border-orange-800 dark:text-orange-400 text-xs">
@@ -487,14 +504,14 @@ const Dashboard = () => {
                                   </div>
                                   <div className="w-full bg-muted rounded-full h-1.5">
                                     <div 
-                                      className="bg-gradient-to-r from-primary to-accent h-1.5 rounded-full transition-all duration-500"
+                                      className="bg-gradient-to-r from-primary to-primary/70 dark:from-secondary dark:to-secondary/70 h-1.5 rounded-full transition-all duration-500"
                                       style={{ width: `${Math.min(progress, 100)}%` }}
                                     />
                                   </div>
                                   <div className="flex items-center justify-between text-xs">
                                     <div className="flex items-center gap-1 text-muted-foreground">
                                       <Calendar className="h-3 w-3" />
-                                      {daysLeft} days left
+                                      {daysLeft > 0 ? `${daysLeft} days left` : 'Ended'}
                                     </div>
                                     <div className="flex items-center gap-1 text-muted-foreground">
                                       <Users className="h-3 w-3" />
@@ -503,7 +520,11 @@ const Dashboard = () => {
                                   </div>
                                 </div>
                               </div>
-                              <Button size="sm" variant="outline" className="shrink-0 gap-1 text-xs">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="shrink-0 gap-1 text-xs group-hover:bg-primary group-hover:text-white group-hover:border-primary dark:group-hover:bg-secondary dark:group-hover:text-background dark:group-hover:border-secondary transition-all"
+                              >
                                 Support
                                 <ArrowRight className="h-3 w-3" />
                               </Button>
@@ -518,9 +539,10 @@ const Dashboard = () => {
             </div>
           ) : (
             <Card className="border-border bg-card">
-              <CardContent className="py-8 text-center">
-                <Target className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+              <CardContent className="py-12 text-center">
+                <Target className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">No campaigns found</p>
+                <p className="text-xs text-muted-foreground mt-1">Check back later for new campaigns</p>
               </CardContent>
             </Card>
           )}

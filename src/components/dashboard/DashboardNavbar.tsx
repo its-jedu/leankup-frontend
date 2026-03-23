@@ -102,8 +102,8 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
 
   return (
     <nav className={cn(
-      "sticky top-0 z-40 transition-all duration-300 bg-background border-b border-border",
-      isScrolled && "shadow-sm"
+      "sticky top-0 z-40 transition-all duration-300 bg-background/95 backdrop-blur-sm border-b border-border",
+      isScrolled && "shadow-md"
     )}>
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
         {/* Left Section - Menu Button and Logo */}
@@ -112,12 +112,12 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
             variant="ghost" 
             size="icon" 
             onClick={onMenuClick} 
-            className="md:hidden rounded-full hover:bg-muted"
+            className="md:hidden rounded-full bg-card hover:bg-muted transition-colors"
           >
             <Menu className="h-5 w-5" />
           </Button>
           <Link to="/dashboard" className="flex items-center">
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text">
               LeankUp
             </span>
           </Link>
@@ -142,7 +142,7 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
             variant="ghost" 
             size="icon" 
             onClick={toggleTheme}
-            className="rounded-full hover:bg-muted"
+            className="rounded-full bg-card hover:bg-muted transition-colors"
           >
             {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
@@ -150,11 +150,15 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
           {/* Notification Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative rounded-full hover:bg-muted">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="relative rounded-full bg-card hover:bg-muted transition-colors"
+              >
                 <Bell className="h-5 w-5" />
                 {unreadCount.unread_count > 0 && (
                   <Badge 
-                    className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs"
+                    className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-destructive text-destructive-foreground text-xs rounded-full"
                   >
                     {unreadCount.unread_count > 9 ? '9+' : unreadCount.unread_count}
                   </Badge>
@@ -162,13 +166,13 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-96 bg-popover border-border shadow-xl rounded-xl p-0">
-              <div className="p-4 border-b border-border flex items-center justify-between">
+              <div className="p-4 border-b border-border flex items-center justify-between bg-popover">
                 <DropdownMenuLabel className="p-0 text-base font-semibold text-foreground">Notifications</DropdownMenuLabel>
                 {unreadCount.unread_count > 0 && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 text-xs text-primary"
+                    className="h-8 text-xs text-primary hover:text-primary/80"
                     onClick={() => markAllAsReadMutation.mutate()}
                   >
                     <CheckCheck className="h-3 w-3 mr-1" />
@@ -188,8 +192,8 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
                     <DropdownMenuItem
                       key={notification.id}
                       className={cn(
-                        "cursor-pointer p-4 flex flex-col items-start gap-1 border-b border-border last:border-0",
-                        !notification.is_read && "bg-primary/5"
+                        "cursor-pointer p-4 flex flex-col items-start gap-1 border-b border-border last:border-0 relative",
+                        !notification.is_read && "bg-primary/5 hover:bg-primary/10"
                       )}
                       onClick={() => handleNotificationClick(notification)}
                     >
@@ -212,8 +216,8 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
                 )}
               </ScrollArea>
               
-              <div className="p-3 border-t border-border">
-                <Link to="/notifications" className="block text-center text-sm text-primary hover:underline">
+              <div className="p-3 border-t border-border bg-popover">
+                <Link to="/notifications" className="block text-center text-sm text-primary hover:text-primary/80 hover:underline">
                   View all notifications
                 </Link>
               </div>
@@ -223,9 +227,12 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 ml-1 hover:bg-muted">
-                <Avatar className="h-10 w-10 border-2 border-primary/20">
-                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-primary font-semibold">
+              <Button 
+                variant="ghost" 
+                className="relative h-10 w-10 rounded-full p-0 ml-1 bg-card hover:bg-muted transition-colors"
+              >
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary-light/20 text-primary font-semibold">
                     {getInitials()}
                   </AvatarFallback>
                 </Avatar>
@@ -236,7 +243,7 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
                 <p className="text-sm font-semibold text-foreground">{user?.first_name} {user?.last_name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
               </div>
-              <DropdownMenuItem asChild className="cursor-pointer rounded-lg mt-1">
+              <DropdownMenuItem asChild className="cursor-pointer rounded-lg mt-1 focus:bg-muted">
                 <Link to="/dashboard/profile" className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
                     <Settings className="h-4 w-4" />
@@ -244,7 +251,7 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
                   <span>Profile Settings</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer rounded-lg">
+              <DropdownMenuItem asChild className="cursor-pointer rounded-lg focus:bg-muted">
                 <Link to="/wallet" className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
                     <Wallet className="h-4 w-4" />
@@ -253,7 +260,7 @@ const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-border my-2" />
-              <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 focus:text-red-600 rounded-lg">
+              <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 rounded-lg">
                 <div className="flex items-center gap-2">
                   <LogOut className="h-4 w-4" />
                   <span>Logout</span>

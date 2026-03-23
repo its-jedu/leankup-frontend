@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import DashboardNavbar from './DashboardNavbar'
 import DashboardSidebar from './DashboardSidebar'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,20 @@ import { Button } from '@/components/ui/button'
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+      if (window.innerWidth >= 768) {
+        setMobileSidebarOpen(false)
+      }
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,7 +57,7 @@ const DashboardLayout = () => {
                 animate={{ x: 0 }}
                 exit={{ x: -320 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed left-0 top-0 bottom-0 w-80 z-50 shadow-2xl"
+                className="fixed left-0 top-0 bottom-0 w-80 z-50 shadow-2xl bg-card"
               >
                 <DashboardSidebar 
                   isCollapsed={false} 
@@ -57,17 +71,16 @@ const DashboardLayout = () => {
         </AnimatePresence>
 
         {/* Main Content */}
-        <motion.main 
-          className="flex-1 p-4 md:p-6 transition-all duration-300"
-          animate={{ 
-            marginLeft: sidebarOpen && window.innerWidth >= 768 ? 280 : 80 
+        <main 
+          className="flex-1 transition-all duration-300"
+          style={{
+            marginLeft: !isMobile && sidebarOpen ? '280px' : !isMobile ? '80px' : '0px'
           }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
         >
-          <div className="max-w-7xl mx-auto">
+          <div className="p-4 md:p-6 max-w-7xl mx-auto">
             <Outlet />
           </div>
-        </motion.main>
+        </main>
       </div>
     </div>
   )

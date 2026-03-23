@@ -214,11 +214,11 @@ const WalletPage = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">Completed</span>
+        return <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded">Completed</span>
       case 'pending':
-        return <span className="text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Pending</span>
+        return <span className="text-xs text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded">Pending</span>
       case 'failed':
-        return <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">Failed</span>
+        return <span className="text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">Failed</span>
       default:
         return null
     }
@@ -251,7 +251,7 @@ const WalletPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary dark:border-secondary"></div>
       </div>
     )
   }
@@ -277,17 +277,17 @@ const WalletPage = () => {
         </Button>
       </div>
 
-      {/* Balance Card */}
-      <Card className="bg-gradient-to-r from-primary to-accent border-0">
+      {/* Balance Card - Updated with better visibility in both modes */}
+      <Card className="bg-gradient-to-r from-blue-600 to-blue-500 dark:from-secondary/90 dark:to-secondary/70 border-0 shadow-xl">
         <CardContent className="p-6 md:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-3 rounded-xl">
-                <WalletIcon className="h-6 w-6 md:h-8 md:w-8 text-white" />
+              <div className="bg-white/20 dark:bg-background/20 p-3 rounded-xl">
+                <WalletIcon className="h-6 w-6 md:h-8 md:w-8 text-white dark:text-white" />
               </div>
               <div>
-                <p className="text-sm text-white/80">Total Balance</p>
-                <h2 className="text-2xl md:text-4xl font-bold text-white">
+                <p className="text-sm text-white/80 dark:text-white/80">Total Balance</p>
+                <h2 className="text-2xl md:text-4xl font-bold text-white dark:text-white">
                   ₦{(stats?.balance || 0).toLocaleString()}
                 </h2>
               </div>
@@ -295,7 +295,7 @@ const WalletPage = () => {
             <div className="flex gap-2">
               <Dialog open={isFundOpen} onOpenChange={setIsFundOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="secondary" className="bg-white text-primary hover:bg-white/90">
+                  <Button variant="secondary" className="bg-white text-blue-600 hover:bg-white/90 dark:bg-foreground dark:text-background dark:hover:bg-foreground/90">
                     Fund Wallet
                   </Button>
                 </DialogTrigger>
@@ -331,7 +331,7 @@ const WalletPage = () => {
                     <Button
                       onClick={handleFundWallet}
                       disabled={isFunding || !fundAmount || parseFloat(fundAmount) < 1000}
-                      className="bg-primary hover:bg-primary/90"
+                      className="bg-primary text-white hover:bg-primary/90 dark:bg-secondary dark:text-background dark:hover:bg-secondary/90"
                     >
                       {isFunding ? 'Processing...' : 'Proceed to Payment'}
                     </Button>
@@ -341,7 +341,7 @@ const WalletPage = () => {
 
               <Dialog open={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="secondary" className="bg-white text-primary hover:bg-white/90">
+                  <Button variant="secondary" className="bg-white text-blue-600 hover:bg-white/90 dark:bg-foreground dark:text-background dark:hover:bg-foreground/90">
                     Withdraw Funds
                   </Button>
                 </DialogTrigger>
@@ -426,7 +426,7 @@ const WalletPage = () => {
                     <Button
                       onClick={handleWithdraw}
                       disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > (stats?.balance || 0) || withdrawMutation.isPending || !bankName || !bankAccountNumber || !bankAccountName}
-                      className="bg-primary hover:bg-primary/90"
+                      className="bg-primary text-white hover:bg-primary/90 dark:bg-secondary dark:text-background dark:hover:bg-secondary/90"
                     >
                       {withdrawMutation.isPending ? 'Processing...' : 'Withdraw'}
                     </Button>
@@ -436,28 +436,34 @@ const WalletPage = () => {
             </div>
           </div>
 
-          {/* Stats Grid */}
+          {/* Stats Grid - Updated with better contrast */}
           <div className="grid grid-cols-3 gap-3 md:gap-4">
-            <div className="bg-white/10 rounded-lg p-3 md:p-4">
+            <div className="bg-white/20 dark:bg-background/20 rounded-lg p-3 md:p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-1">
-                <TrendingDown className="h-3 w-3 text-white/80" />
-                <p className="text-xs text-white/80">Total Deposits</p>
+                <TrendingDown className="h-3 w-3 text-white dark:text-white/90" />
+                <p className="text-xs text-white dark:text-white/90">Total Deposits</p>
               </div>
-              <p className="text-base md:text-xl font-semibold text-white">₦{(stats?.total_deposits || 0).toLocaleString()}</p>
+              <p className="text-base md:text-xl font-semibold text-white dark:text-white">
+                ₦{(stats?.total_deposits || 0).toLocaleString()}
+              </p>
             </div>
-            <div className="bg-white/10 rounded-lg p-3 md:p-4">
+            <div className="bg-white/20 dark:bg-background/20 rounded-lg p-3 md:p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-3 w-3 text-white/80" />
-                <p className="text-xs text-white/80">Total Withdrawals</p>
+                <TrendingUp className="h-3 w-3 text-white dark:text-white/90" />
+                <p className="text-xs text-white dark:text-white/90">Total Withdrawals</p>
               </div>
-              <p className="text-base md:text-xl font-semibold text-white">₦{(stats?.total_withdrawals || 0).toLocaleString()}</p>
+              <p className="text-base md:text-xl font-semibold text-white dark:text-white">
+                ₦{(stats?.total_withdrawals || 0).toLocaleString()}
+              </p>
             </div>
-            <div className="bg-white/10 rounded-lg p-3 md:p-4">
+            <div className="bg-white/20 dark:bg-background/20 rounded-lg p-3 md:p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-1">
-                <Clock className="h-3 w-3 text-white/80" />
-                <p className="text-xs text-white/80">Pending</p>
+                <Clock className="h-3 w-3 text-white dark:text-white/90" />
+                <p className="text-xs text-white dark:text-white/90">Pending</p>
               </div>
-              <p className="text-base md:text-xl font-semibold text-white">₦{(stats?.pending_amount || 0).toLocaleString()}</p>
+              <p className="text-base md:text-xl font-semibold text-white dark:text-white">
+                ₦{(stats?.pending_amount || 0).toLocaleString()}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -504,7 +510,7 @@ const WalletPage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`font-semibold text-sm md:text-base ${
-                        transaction.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'
+                        transaction.transaction_type === 'credit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       }`}>
                         {transaction.transaction_type === 'credit' ? '+' : '-'}₦{Math.abs(transaction.amount).toLocaleString()}
                       </span>
@@ -532,8 +538,8 @@ const WalletPage = () => {
                       className="flex items-center justify-between p-3 md:p-4 rounded-lg hover:bg-muted/50 transition border border-border"
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="bg-green-500/10 p-2 rounded-lg">
-                          <ArrowDownLeft className="h-5 w-5 text-green-500" />
+                        <div className="bg-green-500/10 dark:bg-green-500/20 p-2 rounded-lg">
+                          <ArrowDownLeft className="h-5 w-5 text-green-500 dark:text-green-400" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-sm md:text-base text-foreground">
@@ -548,7 +554,7 @@ const WalletPage = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-green-600">+₦{Math.abs(transaction.amount).toLocaleString()}</span>
+                        <span className="font-semibold text-green-600 dark:text-green-400">+₦{Math.abs(transaction.amount).toLocaleString()}</span>
                       </div>
                     </div>
                   ))
@@ -573,8 +579,8 @@ const WalletPage = () => {
                       className="flex items-center justify-between p-3 md:p-4 rounded-lg hover:bg-muted/50 transition border border-border"
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="bg-red-500/10 p-2 rounded-lg">
-                          <ArrowUpRight className="h-5 w-5 text-red-500" />
+                        <div className="bg-red-500/10 dark:bg-red-500/20 p-2 rounded-lg">
+                          <ArrowUpRight className="h-5 w-5 text-red-500 dark:text-red-400" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-sm md:text-base text-foreground">
@@ -589,7 +595,7 @@ const WalletPage = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-red-600">-₦{Math.abs(transaction.amount).toLocaleString()}</span>
+                        <span className="font-semibold text-red-600 dark:text-red-400">-₦{Math.abs(transaction.amount).toLocaleString()}</span>
                       </div>
                     </div>
                   ))

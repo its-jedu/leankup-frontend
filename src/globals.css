@@ -9,14 +9,14 @@
 }
 
 :root {
-  /* Light mode - Blue & White theme */
-  --primary: 210 100% 28%; /* #032b5f */
-  --primary-light: 210 85% 35%; /* Lighter blue */
-  --secondary: 45 100% 50%; /* Warm gold accent */
-  --accent: 210 100% 35%; /* Complementary blue */
-  --background: 210 33% 97%; /* #f2f6fa */
-  --foreground: 210 50% 20%; /* Dark blue-gray text */
-  --card: 0 0% 100%; /* Pure white cards */
+  /* Light mode - Professional Blue & White theme */
+  --primary: 210 100% 28%;
+  --primary-light: 210 85% 35%;
+  --secondary: 45 100% 50%;
+  --accent: 210 100% 35%;
+  --background: 210 33% 97%;
+  --foreground: 210 50% 20%;
+  --card: 0 0% 100%;
   --card-foreground: 210 50% 20%;
   --popover: 0 0% 100%;
   --popover-foreground: 210 50% 20%;
@@ -34,23 +34,24 @@
 }
 
 .dark {
-  /* Dark mode - Deep navy & dark green */
-  --primary: 210 85% 35%; /* Lighter blue for dark mode */
-  --primary-light: 210 90% 45%;
-  --secondary: 90 80% 30%; /* #0a1c04 inspired green */
-  --accent: 210 80% 40%;
-  --background: 210 75% 15%; /* #062147 inspired */
+  /* Dark mode - Deep Navy theme */
+  --primary: 210 85% 45%;
+  --primary-light: 210 90% 55%;
+  --secondary: 90 80% 35%;
+  --accent: 210 80% 50%;
+  --background: 210 75% 8%;
   --foreground: 0 0% 95%;
-  --card: 210 70% 18%;
+  --card: 210 70% 12%;
   --card-foreground: 0 0% 95%;
-  --popover: 210 70% 18%;
+  --popover: 210 70% 12%;
   --popover-foreground: 0 0% 95%;
-  --muted: 210 60% 22%;
+  --muted: 210 60% 18%;
   --muted-foreground: 0 0% 70%;
-  --border: 210 50% 25%;
-  --input: 210 50% 25%;
-  --ring: 210 85% 35%;
+  --border: 210 50% 20%;
+  --input: 210 50% 20%;
+  --ring: 210 85% 45%;
   --destructive: 0 70% 50%;
+  --destructive-foreground: 0 0% 100%;
   --grid-color: rgba(10, 28, 4, 0.2);
 }
 
@@ -85,7 +86,7 @@
   textarea,
   select,
   button {
-    font-size: 16px; /* Prevents zoom on mobile Safari */
+    font-size: 16px;
   }
   
   @media (max-width: 640px) {
@@ -247,7 +248,7 @@
   transform: scale(1.02);
 }
 
-/* Scrollbar Styling - Optional */
+/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -331,7 +332,7 @@ button:active {
 
 /* Gradient text utility */
 .gradient-text {
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -342,4 +343,11 @@ button:active {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* Card background consistency */
+.card-solid {
+  background-color: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
 }
