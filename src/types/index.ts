@@ -12,7 +12,7 @@ export interface Task {
   id: number
   title: string
   description: string
-  category: 'cleaning' | 'delivery' | 'moving' | 'repair' | 'tutoring' | 'other'
+  category: 'Cleaning' | 'Delivery' | 'Moving' | 'Repair' | 'Tutoring' | 'Other'
   budget: number
   location: string
   status: 'open' | 'in_progress' | 'completed' | 'cancelled'

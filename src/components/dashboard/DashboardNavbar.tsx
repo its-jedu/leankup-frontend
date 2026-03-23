@@ -1,9 +1,9 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Moon, Sun, Bell, CheckCheck, Briefcase, Target, Users, LogOut } from 'lucide-react'
+import { Moon, Sun, Bell, CheckCheck, Menu, LogOut, Settings, Wallet } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import axiosInstance from '@/lib/axios'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface Notification {
   id: number
@@ -31,22 +31,25 @@ interface Notification {
   application?: number
 }
 
-const DashboardNavbar = () => {
+interface DashboardNavbarProps {
+  onMenuClick: () => void
+}
+
+const DashboardNavbar = ({ onMenuClick }: DashboardNavbarProps) => {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [isScrolled, setIsScrolled] = useState(false)
 
-  // Add scroll listener
-  if (typeof window !== 'undefined') {
-    window.addEventListener('scroll', () => {
+  useEffect(() => {
+    const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
-    })
-  }
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
-  // Fetch recent notifications
-  const { data: notifications = [], refetch: refetchNotifications } = useQuery({
+  const { data: notifications = [] } = useQuery({
     queryKey: ['recent-notifications'],
     queryFn: async () => {
       const response = await axiosInstance.get('/tasks/notifications/recent/')
@@ -55,7 +58,6 @@ const DashboardNavbar = () => {
     refetchInterval: 30000,
   })
 
-  // Fetch unread count
   const { data: unreadCount = { unread_count: 0 } } = useQuery({
     queryKey: ['unread-notifications-count'],
     queryFn: async () => {
@@ -65,7 +67,6 @@ const DashboardNavbar = () => {
     refetchInterval: 30000,
   })
 
-  // Mark notification as read
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId: number) => 
       axiosInstance.post(`/tasks/notifications/${notificationId}/mark_read/`),
@@ -75,7 +76,6 @@ const DashboardNavbar = () => {
     },
   })
 
-  // Mark all as read
   const markAllAsReadMutation = useMutation({
     mutationFn: () => axiosInstance.post('/tasks/notifications/mark_all_read/'),
     onSuccess: () => {
@@ -88,15 +88,8 @@ const DashboardNavbar = () => {
     if (!notification.is_read) {
       markAsReadMutation.mutate(notification.id)
     }
-    
     if (notification.task) {
-      if (notification.notification_type === 'application') {
-        navigate(`/tasks/${notification.task}/applications`)
-      } else {
-        navigate(`/tasks/${notification.task}`)
-      }
-    } else if (notification.application) {
-      navigate(`/tasks/applications/${notification.application}`)
+      window.location.href = `/tasks/${notification.task}`
     }
   }
 
@@ -107,12 +100,6 @@ const DashboardNavbar = () => {
     return user?.username?.slice(0, 2).toUpperCase() || 'U'
   }
 
-  const navItems = [
-    { name: 'Tasks', path: '/tasks', icon: Briefcase },
-    { name: 'Campaigns', path: '/campaigns', icon: Target },
-    { name: 'Community', path: '/community', icon: Users },
-  ]
-
   return (
     <nav className={cn(
       "sticky top-0 z-40 transition-all duration-300",
@@ -121,44 +108,40 @@ const DashboardNavbar = () => {
         : "bg-background border-b border-border"
     )}>
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
-        {/* Logo */}
-        <Link to="/dashboard" className="flex items-center shrink-0">
-          <span className="text-2xl font-bold bg-gradient-to-r from-[#032b5f] to-[#1e4a76] dark:from-[#FBBF24] dark:to-[#fcd34d] bg-clip-text text-transparent">
-            LeankUp
-          </span>
-        </Link>
+        {/* Left Section - Menu Button and Logo */}
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onMenuClick} 
+            className="md:hidden rounded-full hover:bg-muted"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <Link to="/dashboard" className="hidden md:flex items-center">
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              LeankUp
+            </span>
+          </Link>
+        </div>
 
-        {/* Navigation Links - Desktop */}
-        <div className="hidden md:flex items-center gap-1 ml-8">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {item.name}
-              </Link>
-            )
-          })}
+        {/* Center Section - Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-1">
+          <Link to="/tasks" className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all">
+            Browse Tasks
+          </Link>
+          <Link to="/campaigns" className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all">
+            Browse Campaigns
+          </Link>
         </div>
 
         {/* Right Section */}
         <div className="flex items-center gap-2">
-          {/* Theme Toggle */}
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={toggleTheme}
-            className="rounded-full"
+            className="rounded-full hover:bg-muted"
           >
             {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
@@ -166,7 +149,7 @@ const DashboardNavbar = () => {
           {/* Notification Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative rounded-full">
+              <Button variant="ghost" size="icon" className="relative rounded-full hover:bg-muted">
                 <Bell className="h-5 w-5" />
                 {unreadCount.unread_count > 0 && (
                   <Badge 
@@ -239,7 +222,7 @@ const DashboardNavbar = () => {
           {/* User Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 ml-1">
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 ml-1 hover:bg-muted">
                 <Avatar className="h-10 w-10 border-2 border-primary/20">
                   <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20 text-primary font-semibold">
                     {getInitials()}
@@ -255,7 +238,7 @@ const DashboardNavbar = () => {
               <DropdownMenuItem asChild className="cursor-pointer rounded-lg mt-1">
                 <Link to="/dashboard/profile" className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                    <Users className="h-4 w-4" />
+                    <Settings className="h-4 w-4" />
                   </div>
                   <span>Profile Settings</span>
                 </Link>
@@ -263,7 +246,7 @@ const DashboardNavbar = () => {
               <DropdownMenuItem asChild className="cursor-pointer rounded-lg">
                 <Link to="/wallet" className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                    <Briefcase className="h-4 w-4" />
+                    <Wallet className="h-4 w-4" />
                   </div>
                   <span>Wallet</span>
                 </Link>
@@ -278,29 +261,6 @@ const DashboardNavbar = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-
-      {/* Mobile Navigation Links */}
-      <div className="md:hidden flex items-center justify-around py-2 border-t border-border bg-background">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-all duration-200",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs">{item.name}</span>
-            </Link>
-          )
-        })}
       </div>
     </nav>
   )
