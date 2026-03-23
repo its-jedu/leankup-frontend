@@ -13,7 +13,7 @@ import {
 
 const features = [
   {
-    icon: <Globe className="h-8 w-8 text-[hsl(var(--primary))]" />,
+    icon: <Globe className="h-8 w-8 text-[#032b5f] dark:text-[#FBBF24]" />,
     title: "Local Outsourcing",
     description: "Find trusted local talent for your tasks or earn by completing tasks in your community",
     stats: "500+ tasks weekly",
@@ -21,7 +21,7 @@ const features = [
     benefits: ["Verified professionals", "Secure payments", "Rating system"]
   },
   {
-    icon: <Target className="h-8 w-8 text-[hsl(var(--primary))]" />,
+    icon: <Target className="h-8 w-8 text-[#032b5f] dark:text-[#FBBF24]" />,
     title: "Fundraising",
     description: "Launch campaigns and raise funds with secure escrow protection for all transactions",
     stats: "$450k raised",
@@ -29,7 +29,7 @@ const features = [
     benefits: ["Escrow protection", "Community focused", "0% platform fees"]
   },
   {
-    icon: <Wallet className="h-8 w-8 text-[hsl(var(--primary))]" />,
+    icon: <Wallet className="h-8 w-8 text-[#032b5f] dark:text-[#FBBF24]" />,
     title: "Smart Wallet",
     description: "Manage your earnings securely with instant withdrawals to bank or your Raenest Account",
     stats: "Instant withdrawals",
@@ -40,7 +40,7 @@ const features = [
 
 const FeaturesSection = () => {
   return (
-    <section id="features" className="py-20 bg-background">
+    <section id="features" className="py-20 bg-[#f2f6fa] dark:bg-[#062147]">
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -49,12 +49,12 @@ const FeaturesSection = () => {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#032b5f] dark:text-white">
+            <span className="bg-gradient-to-r from-[#032b5f] to-[#1e4a76] dark:from-[#FBBF24] dark:to-[#fcd34d] bg-clip-text text-transparent">
               Everything You Need
             </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Powerful features designed to help you outsource tasks, raise funds, and manage your finances seamlessly.
           </p>
         </motion.div>
@@ -69,7 +69,7 @@ const FeaturesSection = () => {
               viewport={{ once: true }}
               whileHover={{ y: -10 }}
             >
-              <Card className="group overflow-hidden border border-border bg-card hover:shadow-2xl transition-all duration-500">
+              <Card className="group overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0a2a1a] hover:shadow-2xl transition-all duration-500">
                 <div className="h-48 overflow-hidden">
                   <img 
                     src={feature.image} 
@@ -78,27 +78,27 @@ const FeaturesSection = () => {
                   />
                 </div>
                 <CardContent className="p-6">
-                  <div className="bg-[hsl(var(--primary))]/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="bg-[#032b5f]/10 dark:bg-[#FBBF24]/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
                   </div>
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">{feature.title}</h3>
-                  <p className="text-muted-foreground mb-4">{feature.description}</p>
+                  <h3 className="text-xl font-semibold mb-2 text-[#032b5f] dark:text-white">{feature.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">{feature.description}</p>
                   
                   {/* Benefits */}
                   <div className="space-y-2 mb-4">
                     {feature.benefits.map((benefit, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      <div key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <CheckCircle className="h-4 w-4 text-[#FBBF24]" />
                         <span>{benefit}</span>
                       </div>
                     ))}
                   </div>
 
                   {/* Stats */}
-                  <div className="pt-4 border-t border-border">
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Activity</span>
-                      <span className="text-sm font-semibold text-[hsl(var(--primary))]">{feature.stats}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Activity</span>
+                      <span className="text-sm font-semibold text-[#032b5f] dark:text-[#FBBF24]">{feature.stats}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -124,11 +124,11 @@ const FeaturesSection = () => {
             const Icon = item.icon
             return (
               <div key={i} className="text-center">
-                <div className="bg-[hsl(var(--primary))]/5 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Icon className="h-6 w-6 text-[hsl(var(--primary))]" />
+                <div className="bg-[#032b5f]/5 dark:bg-[#FBBF24]/5 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Icon className="h-6 w-6 text-[#032b5f] dark:text-[#FBBF24]" />
                 </div>
-                <div className="text-sm text-muted-foreground">{item.label}</div>
-                <div className="font-semibold text-foreground">{item.value}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{item.label}</div>
+                <div className="font-semibold text-[#032b5f] dark:text-white">{item.value}</div>
               </div>
             )
           })}

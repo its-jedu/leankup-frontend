@@ -34,7 +34,7 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section id="testimonials" className="py-20 bg-card overflow-hidden">
+    <section id="testimonials" className="py-20 bg-[#f2f6fa] dark:bg-[#062147] overflow-hidden">
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -45,11 +45,11 @@ const TestimonialsSection = () => {
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Together,{' '}
-            <span className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
+            <span className="text-[#032b5f] dark:text-[#FBBF24]">
               we achieve more
             </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Real stories from community members who have grown and succeeded with LeankUp
           </p>
         </motion.div>
@@ -64,36 +64,36 @@ const TestimonialsSection = () => {
               viewport={{ once: true }}
               whileHover={{ y: -5 }}
             >
-              <Card className="h-full hover:shadow-xl transition-all duration-300 border-border">
+              <Card className="h-full hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0a2a1a]">
                 <CardContent className="p-6">
                   {/* Quote icon */}
-                  <Quote className="h-8 w-8 text-[hsl(var(--primary))]/20 mb-4" />
+                  <Quote className="h-8 w-8 text-[#032b5f]/20 dark:text-[#FBBF24]/20 mb-4" />
                   
                   {/* Rating */}
                   <div className="flex gap-1 mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-[hsl(var(--secondary))] text-[hsl(var(--secondary))]" />
+                      <Star key={i} className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]" />
                     ))}
                   </div>
                   
                   {/* Content */}
-                  <p className="text-foreground/80 mb-6 line-clamp-4">"{testimonial.content}"</p>
+                  <p className="text-gray-700 dark:text-gray-300 mb-6 line-clamp-4">"{testimonial.content}"</p>
                   
                   {/* User info */}
                   <div className="flex items-center gap-3">
                     <img 
                       src={testimonial.image} 
                       alt={testimonial.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-[hsl(var(--primary))]/20"
+                      className="w-12 h-12 rounded-full object-cover border-2 border-[#032b5f]/20 dark:border-[#FBBF24]/20"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = `https://ui-avatars.com/api/?name=${testimonial.name.replace(' ', '+')}&background=4F46E5&color=fff&size=48`;
+                        target.src = `https://ui-avatars.com/api/?name=${testimonial.name.replace(' ', '+')}&background=032b5f&color=fff&size=48`;
                       }}
                     />
                     <div>
-                      <p className="font-semibold text-foreground">{testimonial.name}</p>
-                      <p className="text-xs text-muted-foreground">{testimonial.role}</p>
-                      <p className="text-xs text-[hsl(var(--primary))]">{testimonial.business}</p>
+                      <p className="font-semibold text-[#032b5f] dark:text-white">{testimonial.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{testimonial.role}</p>
+                      <p className="text-xs text-[#FBBF24]">{testimonial.business}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -117,8 +117,8 @@ const TestimonialsSection = () => {
             { value: "24/7", label: "Support available" }
           ].map((stat, i) => (
             <div key={i}>
-              <div className="text-2xl font-bold text-[hsl(var(--primary))]">{stat.value}</div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
+              <div className="text-2xl font-bold text-[#032b5f] dark:text-[#FBBF24]">{stat.value}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</div>
             </div>
           ))}
         </motion.div>

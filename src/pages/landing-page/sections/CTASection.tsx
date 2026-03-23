@@ -6,22 +6,22 @@ import { ArrowRight, CheckCircle } from 'lucide-react'
 const CTASection = () => {
   return (
     <section className="relative overflow-hidden py-20">
-      {/* Base gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))]"></div>
+      {/* Base gradient background - using primary blue */}
+      <div className="absolute inset-0 bg-[#032b5f] dark:bg-[#062147]"></div>
       
-      {/* Grid overlay - now visible on top of gradient */}
+      {/* Grid overlay */}
       <div 
         className="absolute inset-0" 
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)
+            linear-gradient(to right, rgba(242, 246, 250, 0.1) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(242, 246, 250, 0.1) 1px, transparent 1px)
           `,
           backgroundSize: '40px 40px'
         }}
       ></div>
       
-      {/* Animated circles - on top of grid */}
+      {/* Animated circles */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-white/20 rounded-full blur-3xl animate-pulse-glow"></div>
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl animate-pulse-glow delay-200"></div>
       <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-float"></div>
@@ -37,7 +37,7 @@ const CTASection = () => {
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
             Turn your goals into{' '}
-            <span className="text-[hsl(var(--secondary))]">reality</span>
+            <span className="text-[#FBBF24]">reality</span>
           </h2>
           <p className="text-xl text-white/90 mb-8">
             With just a few clicks, get the support you need to complete tasks or fund your dreams in your local community.
@@ -59,7 +59,7 @@ const CTASection = () => {
                 transition={{ delay: i * 0.1 }}
                 className="flex items-center gap-2 text-white/90"
               >
-                <CheckCircle className="h-4 w-4 text-[hsl(var(--secondary))] flex-shrink-0" />
+                <CheckCircle className="h-4 w-4 text-[#FBBF24] flex-shrink-0" />
                 <span className="text-sm">{benefit}</span>
               </motion.div>
             ))}
@@ -68,7 +68,7 @@ const CTASection = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link to="/register">
-                <Button size="lg" variant="secondary" className="bg-white text-[hsl(var(--primary))] hover:bg-white/90 px-8 w-full sm:w-auto border-0 shadow-xl">
+                <Button size="lg" className="bg-white text-[#032b5f] dark:bg-white dark:text-[#062147] hover:bg-white/90 px-8 w-full sm:w-auto border-0 shadow-xl">
                   Get Started Now
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>

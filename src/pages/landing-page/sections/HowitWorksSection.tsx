@@ -5,10 +5,7 @@ import {
   UserPlus, 
   Search, 
   Wallet, 
-  ArrowRight,
-  CheckCircle,
-  Clock,
-  Shield 
+  ArrowRight
 } from 'lucide-react'
 
 const steps = [
@@ -17,7 +14,7 @@ const steps = [
     title: "Create Account",
     description: "Sign up in less than 2 minutes with your email or social accounts",
     icon: UserPlus,
-    color: "from-blue-500 to-cyan-500",
+    color: "from-[#032b5f] to-[#1e4a76]",
     image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
   },
   {
@@ -25,7 +22,7 @@ const steps = [
     title: "Choose Your Path",
     description: "Browse tasks or start a campaign that matches your goals",
     icon: Search,
-    color: "from-purple-500 to-pink-500",
+    color: "from-[#1e4a76] to-[#032b5f]",
     image: "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
   },
   {
@@ -33,14 +30,14 @@ const steps = [
     title: "Earn & Grow",
     description: "Complete tasks, raise funds, and watch your balance grow",
     icon: Wallet,
-    color: "from-amber-500 to-orange-500",
+    color: "from-[#FBBF24] to-[#fcd34d]",
     image: "https://images.unsplash.com/photo-1579621970795-87facc2f976d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
   }
 ]
 
 const HowItWorksSection = () => {
   return (
-    <section id="how-it-works" className="py-20 bg-gradient-to-b from-gray-50 to-white">
+    <section id="how-it-works" className="py-20 bg-gradient-to-b from-[#f2f6fa] to-white dark:from-[#062147] dark:to-[#0a2a1a]">
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -51,18 +48,18 @@ const HowItWorksSection = () => {
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Get Started in{' '}
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <span className="text-[#032b5f] dark:text-[#FBBF24]">
               3 Simple Steps
             </span>
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Join thousands of users who have already transformed how they work and raise funds
           </p>
         </motion.div>
 
         <div className="relative">
           {/* Connection line */}
-          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-primary/20 via-accent/20 to-secondary/20 transform -translate-y-1/2 hidden lg:block"></div>
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-[#032b5f]/20 via-[#FBBF24]/30 to-[#032b5f]/20 transform -translate-y-1/2 hidden lg:block"></div>
           
           <div className="grid lg:grid-cols-3 gap-8 relative">
             {steps.map((step, index) => {
@@ -76,7 +73,7 @@ const HowItWorksSection = () => {
                   viewport={{ once: true }}
                   className="relative"
                 >
-                  <div className="bg-white rounded-2xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
+                  <div className="bg-white dark:bg-[#0a2a1a] rounded-2xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-500 border border-gray-200 dark:border-gray-700">
                     {/* Image */}
                     <div className="h-48 overflow-hidden">
                       <img 
@@ -92,24 +89,12 @@ const HowItWorksSection = () => {
                     
                     <div className="p-6">
                       {/* Icon */}
-                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${step.color} flex items-center justify-center mb-4 transform -mt-12 border-4 border-white shadow-lg`}>
+                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${step.color} flex items-center justify-center mb-4 transform -mt-12 border-4 border-white dark:border-[#0a2a1a] shadow-lg`}>
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                       
-                      <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                      <p className="text-gray-600 mb-4">{step.description}</p>
-                      
-                      {/* Features */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span>No credit card required</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Clock className="h-4 w-4 text-blue-500" />
-                          <span>Takes less than 2 minutes</span>
-                        </div>
-                      </div>
+                      <h3 className="text-xl font-semibold mb-2 text-[#032b5f] dark:text-white">{step.title}</h3>
+                      <p className="text-gray-600 dark:text-gray-300">{step.description}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -127,7 +112,7 @@ const HowItWorksSection = () => {
           className="text-center mt-12"
         >
           <Link to="/register">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 px-8">
+            <Button size="lg" className="bg-[#032b5f] hover:bg-[#1e4a76] dark:bg-[#FBBF24] dark:hover:bg-[#fcd34d] text-white dark:text-[#062147] px-8">
               Start Your Journey Now
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

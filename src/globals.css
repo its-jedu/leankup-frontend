@@ -9,49 +9,49 @@
 }
 
 :root {
-  /* Light mode - Unique teal & coral theme */
-  --primary: 180 80% 35%; /* Teal #1A7F7F */
-  --primary-light: 180 75% 45%; /* Light Teal #2AA3A3 */
-  --secondary: 15 85% 65%; /* Coral #F28B6F */
-  --accent: 200 85% 50%; /* Ocean Blue #1E9AD9 */
-  --background: 0 0% 100%;
-  --foreground: 200 20% 15%;
-  --card: 0 0% 98%;
-  --card-foreground: 200 20% 15%;
+  /* Light mode - Blue & White theme */
+  --primary: 210 100% 28%; /* #032b5f */
+  --primary-light: 210 85% 35%; /* Lighter blue */
+  --secondary: 45 100% 50%; /* Warm gold accent */
+  --accent: 210 100% 35%; /* Complementary blue */
+  --background: 210 33% 97%; /* #f2f6fa */
+  --foreground: 210 50% 20%; /* Dark blue-gray text */
+  --card: 0 0% 100%; /* Pure white cards */
+  --card-foreground: 210 50% 20%;
   --popover: 0 0% 100%;
-  --popover-foreground: 200 20% 15%;
-  --muted: 180 20% 94%;
-  --muted-foreground: 200 10% 40%;
-  --border: 180 15% 88%;
-  --input: 180 15% 88%;
-  --ring: 180 80% 35%;
+  --popover-foreground: 210 50% 20%;
+  --muted: 210 25% 93%;
+  --muted-foreground: 210 30% 45%;
+  --border: 210 25% 88%;
+  --input: 210 25% 88%;
+  --ring: 210 100% 28%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --radius: 1rem;
   
   /* Grid pattern color */
-  --grid-color: rgba(26, 127, 127, 0.1);
+  --grid-color: rgba(3, 43, 95, 0.08);
 }
 
 .dark {
-  /* Dark mode - Deep teal & warm coral */
-  --primary: 180 75% 45%; /* Brighter Teal */
-  --primary-light: 180 80% 55%;
-  --secondary: 15 80% 60%;
-  --accent: 200 80% 55%;
-  --background: 200 30% 8%;
+  /* Dark mode - Deep navy & dark green */
+  --primary: 210 85% 35%; /* Lighter blue for dark mode */
+  --primary-light: 210 90% 45%;
+  --secondary: 90 80% 30%; /* #0a1c04 inspired green */
+  --accent: 210 80% 40%;
+  --background: 210 75% 15%; /* #062147 inspired */
   --foreground: 0 0% 95%;
-  --card: 200 25% 12%;
+  --card: 210 70% 18%;
   --card-foreground: 0 0% 95%;
-  --popover: 200 25% 12%;
+  --popover: 210 70% 18%;
   --popover-foreground: 0 0% 95%;
-  --muted: 200 20% 18%;
+  --muted: 210 60% 22%;
   --muted-foreground: 0 0% 70%;
-  --border: 200 20% 20%;
-  --input: 200 20% 20%;
-  --ring: 180 75% 45%;
+  --border: 210 50% 25%;
+  --input: 210 50% 25%;
+  --ring: 210 85% 35%;
   --destructive: 0 70% 50%;
-  --grid-color: rgba(42, 163, 163, 0.15);
+  --grid-color: rgba(10, 28, 4, 0.2);
 }
 
 @layer base {
@@ -148,28 +148,6 @@
   animation-delay: 0.4s;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-.delay-400 {
-  animation-delay: 0.4s;
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.8; }
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 4s ease-in-out infinite;
-}
-
 /* Hide scrollbar for Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -180,4 +158,3 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-

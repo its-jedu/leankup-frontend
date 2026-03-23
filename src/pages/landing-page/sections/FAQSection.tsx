@@ -33,7 +33,7 @@ const FAQSection = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20 bg-[#f2f6fa] dark:bg-[#062147]">
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -44,11 +44,11 @@ const FAQSection = () => {
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Still have{' '}
-            <span className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
+            <span className="text-[#032b5f] dark:text-[#FBBF24]">
               questions?
             </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Find answers to common questions about task outsourcing and fundraising on LeankUp
           </p>
         </motion.div>
@@ -65,14 +65,14 @@ const FAQSection = () => {
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full text-left bg-card border border-border rounded-xl p-4 hover:border-[hsl(var(--primary))]/30 transition-colors"
+                className="w-full text-left bg-white dark:bg-[#0a2a1a] border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-[#032b5f]/30 dark:hover:border-[#FBBF24]/30 transition-colors"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-foreground">{faq.question}</span>
+                  <span className="font-semibold text-[#032b5f] dark:text-white">{faq.question}</span>
                   {openIndex === index ? (
-                    <ChevronUp className="h-5 w-5 text-[hsl(var(--primary))]" />
+                    <ChevronUp className="h-5 w-5 text-[#032b5f] dark:text-[#FBBF24]" />
                   ) : (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                   )}
                 </div>
                 {openIndex === index && (
@@ -80,7 +80,7 @@ const FAQSection = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="mt-3 text-muted-foreground border-t border-border pt-3"
+                    className="mt-3 text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700 pt-3"
                   >
                     {faq.answer}
                   </motion.div>
@@ -97,9 +97,9 @@ const FAQSection = () => {
           viewport={{ once: true }}
           className="text-center mt-8"
         >
-          <p className="text-muted-foreground">
+          <p className="text-gray-600 dark:text-gray-300">
             Can't find what you're looking for?{' '}
-            <a href="#contact" className="text-[hsl(var(--primary))] hover:underline">
+            <a href="#contact" className="text-[#032b5f] dark:text-[#FBBF24] hover:underline">
               Contact our support team
             </a>
           </p>

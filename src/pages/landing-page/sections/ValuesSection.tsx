@@ -36,7 +36,7 @@ const ValuesSection = () => {
   ]
 
   return (
-    <section className="py-20 bg-background">
+    <section className="py-20 bg-white dark:bg-[#062147]">
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -47,11 +47,11 @@ const ValuesSection = () => {
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Our commitment to{' '}
-            <span className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
+            <span className="text-[#032b5f] dark:text-[#FBBF24]">
               values-driven success
             </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Our values shape the way we do business, ensuring every interaction on our platform builds stronger communities.
           </p>
         </motion.div>
@@ -66,13 +66,13 @@ const ValuesSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="bg-card rounded-xl p-6 border border-border hover:shadow-lg transition-all duration-300"
+                className="bg-white dark:bg-[#0a2a1a] rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
               >
-                <div className="bg-[hsl(var(--primary))]/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                  <Icon className="h-6 w-6 text-[hsl(var(--primary))]" />
+                <div className="bg-[#032b5f]/10 dark:bg-[#FBBF24]/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+                  <Icon className="h-6 w-6 text-[#032b5f] dark:text-[#FBBF24]" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{value.title}</h3>
-                <p className="text-muted-foreground">{value.description}</p>
+                <h3 className="text-xl font-semibold mb-2 text-[#032b5f] dark:text-white">{value.title}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{value.description}</p>
               </motion.div>
             )
           })}
@@ -85,7 +85,7 @@ const ValuesSection = () => {
           viewport={{ once: true }}
           className="mt-12 text-center"
         >
-          <p className="text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             By staying true to these principles, we empower local communities to overcome challenges, seize opportunities, and achieve sustainable growth. These values make us a trusted partner for task outsourcing and fundraising in neighborhoods everywhere.
           </p>
         </motion.div>
